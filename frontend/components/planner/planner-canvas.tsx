@@ -145,6 +145,8 @@ export function PlannerCanvas({
                   }}
                   onDrop={(event) => handleCardDrop(event, key)}
                   style={{
+                    gridColumn: `${col + 1}`,
+                    gridRow: `${row + 1}`,
                     backgroundColor: baseBackground,
                     borderColor: activeLayout?.theme.slotAccent ?? DEFAULT_THEME.slotAccent,
                     borderStyle: slotStyle === "dashed" && !placedCard ? "dashed" : "solid",

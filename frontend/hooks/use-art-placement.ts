@@ -60,7 +60,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
       setCropDraft({
         asset,
         rowSpan: 1,
-        colSpan: 2,
+        colSpan: 1,
         cropX: 0,
         cropY: 0,
         zoom: 1,
