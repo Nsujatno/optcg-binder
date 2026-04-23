@@ -75,7 +75,7 @@ Defines the product requirements and implementation direction for the One Piece 
 Documents the current repository structure and the role of the main files. It exists to help future contributors and coding agents orient themselves quickly.
 
 ### [package.json](C:/Users/natha/one-piece-binder/package.json)
-Defines the workspace-level monorepo scripts and declares `frontend` and `backend` as the two applications in this repository. Its role is to provide a single entry point for running and building each side of the stack.
+Defines the workspace-level scripts and provides a single entry point for running the Next.js frontend and the active Python backend service in `backend1`.
 
 ## Frontend App
 
@@ -141,35 +141,23 @@ Provides typed frontend wrappers for calling the separate backend service. Its r
 
 ## Backend Service
 
-### [backend/package.json](C:/Users/natha/one-piece-binder/backend/package.json)
-Declares the Express backend package, dependencies, and runtime scripts. It is the package boundary for the standalone API service.
+### [backend1/requirements.txt](C:/Users/natha/one-piece-binder/backend1/requirements.txt)
+Lists the Python packages required to run the active backend service: FastAPI, Uvicorn, and HTTPX.
 
-### [backend/.env.example](C:/Users/natha/one-piece-binder/backend/.env.example)
-Shows the backend environment variables expected for local development. It documents the default port and allowed frontend origin.
+### [backend1/.env.example](C:/Users/natha/one-piece-binder/backend1/.env.example)
+Documents the Python backend environment variables for local development, including port, allowed frontend origin, and the OPTCG API base URL.
 
-### [backend/src/server.js](C:/Users/natha/one-piece-binder/backend/src/server.js)
-Starts the Express application and binds it to the configured port. Its role is process bootstrap only.
+### [backend1/app/main.py](C:/Users/natha/one-piece-binder/backend1/app/main.py)
+Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, sets, cards, search, and market price lookups.
 
-### [backend/src/app.js](C:/Users/natha/one-piece-binder/backend/src/app.js)
-Creates the Express app, applies middleware, mounts routes, and defines shared 404 and error handlers. It is the composition root for the backend service.
+### [backend1/app/config.py](C:/Users/natha/one-piece-binder/backend1/app/config.py)
+Loads normalized runtime configuration for the Python backend from environment variables.
 
-### [backend/src/config.js](C:/Users/natha/one-piece-binder/backend/src/config.js)
-Loads environment variables with `dotenv` and exports normalized config values. It centralizes backend runtime configuration.
+### [backend1/app/models.py](C:/Users/natha/one-piece-binder/backend1/app/models.py)
+Defines the Pydantic validation models for upstream OPTCG API payloads and the normalized response models returned to the frontend.
 
-### [backend/src/routes/catalog-routes.js](C:/Users/natha/one-piece-binder/backend/src/routes/catalog-routes.js)
-Defines the API routes for sets, cards, search, and market price lookups. Its role is HTTP routing for the catalog-facing backend endpoints.
+### [backend1/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend1/app/optcg_client.py)
+Handles all live OPTCG API calls, caches results with TTLs, and normalizes raw set and card data into the frontend-facing contract without using hardcoded catalog fixtures.
 
-### [backend/src/routes/health-routes.js](C:/Users/natha/one-piece-binder/backend/src/routes/health-routes.js)
-Defines the backend health endpoint. It exists for simple liveness checks during local development and deployment verification.
-
-### [backend/src/services/catalog-service.js](C:/Users/natha/one-piece-binder/backend/src/services/catalog-service.js)
-Wraps the card and pricing fetch logic with TTL-based caching helpers. It keeps route files thin and owns backend-side catalog retrieval behavior.
-
-### [backend/src/optcg.js](C:/Users/natha/one-piece-binder/backend/src/optcg.js)
-Wraps the external One Piece card API integration and normalizes raw payloads into the app's internal backend contract. It isolates third-party response shape changes from both the frontend and the route layer.
-
-### [backend/src/cache.js](C:/Users/natha/one-piece-binder/backend/src/cache.js)
-Implements the backend's lightweight in-memory cache with TTL support. It reduces repeated metadata and market-price lookups without requiring a database for v1.
-
-### [backend/src/catalog-sample.js](C:/Users/natha/one-piece-binder/backend/src/catalog-sample.js)
-Provides backend-side fallback set and card data when the external API is unavailable. It keeps the API service functional for local development and degraded-mode operation.
+### [backend1/app/cache.py](C:/Users/natha/one-piece-binder/backend1/app/cache.py)
+Implements the Python backend's lightweight in-memory TTL cache used to reduce repeated upstream API calls.
