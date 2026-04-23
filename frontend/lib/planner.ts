@@ -11,6 +11,10 @@ import type {
 import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
 
 export const STORAGE_KEY = "one-piece-binder.layouts.v1";
+export const CARD_SLOT_WIDTH = 206;
+export const CARD_SLOT_HEIGHT = 288;
+export const PAGE_GRID_GAP = 12;
+export const PAGE_PADDING = 16;
 
 export const BINDER_BACKGROUNDS = [
   "#101726",
