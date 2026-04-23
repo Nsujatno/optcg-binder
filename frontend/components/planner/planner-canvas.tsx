@@ -50,7 +50,7 @@ export function PlannerCanvas({
     <main className="rounded-[32px] border border-white/10 bg-slate-950/50 p-4 backdrop-blur">
       <div className="overflow-auto pb-2">
         <div
-          className="mx-auto grid rounded-[36px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
+          className="mx-auto grid rounded-[30px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
           style={{
             backgroundColor: activeLayout?.theme.pageBackground ?? DEFAULT_THEME.pageBackground,
             gridTemplateColumns: `repeat(${activeTemplate.cols}, ${CARD_SLOT_WIDTH}px)`,
@@ -122,7 +122,7 @@ export function PlannerCanvas({
               return (
                 <button
                   key={key}
-                  className={`relative overflow-hidden rounded-[24px] border text-left transition ${
+                  className={`relative overflow-hidden rounded-[15px] border text-left transition ${
                     artRegion?.locked && !placedCard ? "cursor-not-allowed" : "cursor-pointer"
                   } ${isSelected ? "ring-2 ring-cyan-300" : "ring-0"}`}
                   draggable={Boolean(placedCardId)}
