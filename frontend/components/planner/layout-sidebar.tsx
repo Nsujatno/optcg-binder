@@ -18,6 +18,8 @@ type LayoutSidebarProps = Pick<
   | "addPage"
   | "duplicatePage"
   | "setSelectedRegionId"
+  | "templateValidationById"
+  | "templateErrorMessage"
 >;
 
 export function LayoutSidebar({
@@ -36,6 +38,8 @@ export function LayoutSidebar({
   addPage,
   duplicatePage,
   setSelectedRegionId,
+  templateValidationById,
+  templateErrorMessage,
 }: LayoutSidebarProps) {
   return (
     <aside className="rounded-[28px] border border-white/10 bg-slate-950/55 p-4 backdrop-blur">
@@ -97,21 +101,35 @@ export function LayoutSidebar({
             Template
           </h3>
           <div className="grid grid-cols-2 gap-2">
-            {BINDER_TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                className={`rounded-2xl px-4 py-3 text-sm transition ${
-                  activeLayout?.templateId === template.id
-                    ? "bg-cyan-300 text-slate-950"
-                    : "border border-white/10 bg-white/5"
-                }`}
-                onClick={() => setTemplate(template.id)}
-                type="button"
-              >
-                {template.name}
-              </button>
-            ))}
+            {BINDER_TEMPLATES.map((template) => {
+              const validation = templateValidationById.get(template.id);
+              const isDisabled = validation ? !validation.canApply : false;
+
+              return (
+                <button
+                  key={template.id}
+                  className={`rounded-2xl px-4 py-3 text-sm transition ${
+                    activeLayout?.templateId === template.id
+                      ? "bg-cyan-300 text-slate-950"
+                      : "border border-white/10 bg-white/5"
+                  } ${isDisabled ? "cursor-not-allowed opacity-40" : ""}`}
+                  disabled={isDisabled}
+                  onClick={() => setTemplate(template.id)}
+                  title={
+                    isDisabled && validation?.reason
+                      ? `Disabled: ${validation.reason}`
+                      : undefined
+                  }
+                  type="button"
+                >
+                  {template.name}
+                </button>
+              );
+            })}
           </div>
+          {templateErrorMessage ? (
+            <p className="mt-2 text-xs text-amber-200">{templateErrorMessage}</p>
+          ) : null}
           <p className="mt-2 text-xs text-slate-500">
             Current grid: {activeTemplate.rows} rows x {activeTemplate.cols} cols
           </p>

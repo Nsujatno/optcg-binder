@@ -8,6 +8,7 @@ import type {
   BinderTemplateId,
   CardRecord,
 } from "@/lib/types";
+import { BINDER_TEMPLATES } from "@/lib/types";
 import {
   createId,
   createLayout,
@@ -20,6 +21,7 @@ import {
   sanitizePageForTemplate,
   slotKey,
   STORAGE_KEY,
+  validatePageForTemplate,
 } from "@/lib/planner";
 
 export function useLayoutManager(cards: CardRecord[]) {
@@ -29,6 +31,7 @@ export function useLayoutManager(cards: CardRecord[]) {
   const [selectedSlotId, setSelectedSlotId] = useState("0-0");
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [templateErrorMessage, setTemplateErrorMessage] = useState("");
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const hasHydrated = useRef(false);
 
@@ -47,6 +50,10 @@ export function useLayoutManager(cards: CardRecord[]) {
     const state: PersistedState = { layouts, activeLayoutId };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [activeLayoutId, layouts]);
+
+  useEffect(() => {
+    setTemplateErrorMessage("");
+  }, [activeLayoutId, activePageIndex]);
 
   const activeLayout = useMemo(
     () => layouts.find((layout) => layout.id === activeLayoutId) ?? null,
@@ -87,6 +94,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     () => Object.values(activePage?.placements ?? {}),
     [activePage?.placements],
   );
+  const activePagePlacedCardCount = activePagePlacedCardIds.length;
   const availableSlotIds = useMemo(() => {
     if (!activePage) {
       return [];
@@ -105,6 +113,26 @@ export function useLayoutManager(cards: CardRecord[]) {
     return slots;
   }, [activePage, activeTemplate.cols, activeTemplate.rows, occupiedByArt]);
   const remainingPageCapacity = availableSlotIds.length;
+  const templateValidationById = useMemo(() => {
+    const entries = new Map<
+      BinderTemplateId,
+      ReturnType<typeof validatePageForTemplate>
+    >();
+    const pageToValidate = activePage ?? {
+      id: "",
+      placements: {},
+      artRegions: [],
+    };
+
+    BINDER_TEMPLATES.forEach((template) => {
+      entries.set(
+        template.id,
+        validatePageForTemplate(pageToValidate, template),
+      );
+    });
+
+    return entries;
+  }, [activePage]);
 
   function updateLayouts(
     updater: (currentLayouts: BinderLayout[]) => BinderLayout[],
@@ -238,10 +266,27 @@ export function useLayoutManager(cards: CardRecord[]) {
 
   function setTemplate(templateId: BinderTemplateId) {
     const template = getTemplate(templateId);
+    if (!activePage) {
+      return;
+    }
+
+    const validation = validatePageForTemplate(activePage, template);
+    if (!validation.canApply) {
+      setTemplateErrorMessage(
+        validation.reason
+          ? `Unable to use ${template.name}: ${validation.reason}`
+          : `Unable to use ${template.name}.`,
+      );
+      return;
+    }
+
+    setTemplateErrorMessage("");
     updateActiveLayout((layout) => ({
       ...layout,
       templateId,
-      pages: layout.pages.map((page) => sanitizePageForTemplate(page, template)),
+      pages: layout.pages.map((page, index) =>
+        index === activePageIndex ? sanitizePageForTemplate(page, template) : page,
+      ),
     }));
     setSelectedRegionId(null);
     setSelectedSlotId("0-0");
@@ -289,6 +334,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     setActivePageIndex(0);
     setSelectedSlotId("0-0");
     setSelectedRegionId(null);
+    setTemplateErrorMessage("");
   }
 
   function handleCardDrop(event: DragEvent<HTMLButtonElement>, targetSlotId: string) {
@@ -373,8 +419,11 @@ export function useLayoutManager(cards: CardRecord[]) {
     currentSlotPosition,
     activeLayoutAssets,
     activePagePlacedCardIds,
+    activePagePlacedCardCount,
     availableSlotIds,
     remainingPageCapacity,
+    templateValidationById,
+    templateErrorMessage,
     updateLayouts,
     updateActiveLayout,
     updateActivePage,

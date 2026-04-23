@@ -48,6 +48,15 @@ export type CropDraft = {
   editingRegionId?: string;
 };
 
+export type TemplateResizeValidation = {
+  canApply: boolean;
+  cardCount: number;
+  templateCapacity: number;
+  hasTooManyCards: boolean;
+  hasOutOfBoundsArt: boolean;
+  reason: string | null;
+};
+
 export function createId(prefix: string) {
   return `${prefix}-${crypto.randomUUID()}`;
 }
@@ -89,28 +98,97 @@ export function sanitizePageForTemplate(
   page: BinderPage,
   template: BinderTemplate,
 ): BinderPage {
-  const allowedSlots = new Set<string>();
-  for (let row = 0; row < template.rows; row += 1) {
-    for (let col = 0; col < template.cols; col += 1) {
-      allowedSlots.add(`${row}-${col}`);
-    }
-  }
-
+  const placedCardIds = getOrderedPlacementIds(page);
   const placements = Object.fromEntries(
-    Object.entries(page.placements).filter(([slotId]) => allowedSlots.has(slotId)),
-  );
-
-  const artRegions = page.artRegions.filter(
-    (region) =>
-      region.originRow + region.rowSpan <= template.rows &&
-      region.originCol + region.colSpan <= template.cols,
+    getTemplateSlotIds(template).slice(0, placedCardIds.length).map((slotId, index) => [
+      slotId,
+      placedCardIds[index],
+    ]),
   );
 
   return {
     ...page,
     placements,
-    artRegions,
   };
+}
+
+export function getTemplateSlotIds(template: BinderTemplate) {
+  const slotIds: string[] = [];
+  for (let row = 0; row < template.rows; row += 1) {
+    for (let col = 0; col < template.cols; col += 1) {
+      slotIds.push(slotKey(row, col));
+    }
+  }
+  return slotIds;
+}
+
+export function getOrderedPlacementIds(page: BinderPage) {
+  return Object.entries(page.placements)
+    .sort(([leftSlotId], [rightSlotId]) => compareSlotIds(leftSlotId, rightSlotId))
+    .map(([, placementId]) => placementId);
+}
+
+export function doesArtRegionFitTemplate(region: ArtRegion, template: BinderTemplate) {
+  return (
+    region.originRow + region.rowSpan <= template.rows &&
+    region.originCol + region.colSpan <= template.cols
+  );
+}
+
+export function validatePageForTemplate(
+  page: BinderPage,
+  template: BinderTemplate,
+): TemplateResizeValidation {
+  const cardCount = Object.keys(page.placements).length;
+  const templateCapacity = template.rows * template.cols;
+  const hasTooManyCards = cardCount > templateCapacity;
+  const hasOutOfBoundsArt = page.artRegions.some(
+    (region) => !doesArtRegionFitTemplate(region, template),
+  );
+
+  if (hasTooManyCards) {
+    return {
+      canApply: false,
+      cardCount,
+      templateCapacity,
+      hasTooManyCards,
+      hasOutOfBoundsArt,
+      reason: `${cardCount} cards exceed ${templateCapacity} slots.`,
+    };
+  }
+
+  if (hasOutOfBoundsArt) {
+    return {
+      canApply: false,
+      cardCount,
+      templateCapacity,
+      hasTooManyCards,
+      hasOutOfBoundsArt,
+      reason: "A Meechi art region would fall outside the page bounds.",
+    };
+  }
+
+  return {
+    canApply: true,
+    cardCount,
+    templateCapacity,
+    hasTooManyCards,
+    hasOutOfBoundsArt,
+    reason: null,
+  };
+}
+
+function compareSlotIds(leftSlotId: string, rightSlotId: string) {
+  const [leftRow = "0", leftCol = "0"] = leftSlotId.split("-");
+  const [rightRow = "0", rightCol = "0"] = rightSlotId.split("-");
+  const leftRowNumber = Number.parseInt(leftRow, 10);
+  const rightRowNumber = Number.parseInt(rightRow, 10);
+
+  if (leftRowNumber !== rightRowNumber) {
+    return leftRowNumber - rightRowNumber;
+  }
+
+  return Number.parseInt(leftCol, 10) - Number.parseInt(rightCol, 10);
 }
 
 export function loadPersistedState(): PersistedState {

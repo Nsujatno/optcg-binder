@@ -48,7 +48,7 @@ export function PlannerApp() {
             selectedRegionId={planner.selectedRegionId}
             setSelectedRegionId={planner.setSelectedRegionId}
             setSelectedSlotId={planner.setSelectedSlotId}
-            cards={planner.cards}
+            cards={planner.allLoadedCards}
             occupiedByArt={planner.occupiedByArt}
             selectedSlotId={planner.selectedSlotId}
             handleCardDrop={planner.handleCardDrop}
@@ -71,6 +71,8 @@ export function PlannerApp() {
               addPage={planner.addPage}
               duplicatePage={planner.duplicatePage}
               setSelectedRegionId={planner.setSelectedRegionId}
+              templateValidationById={planner.templateValidationById}
+              templateErrorMessage={planner.templateErrorMessage}
             />
 
             <InspectorSidebar
