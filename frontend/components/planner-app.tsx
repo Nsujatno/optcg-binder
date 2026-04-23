@@ -15,15 +15,15 @@ export function PlannerApp() {
       className="min-h-screen text-white"
       style={{ backgroundColor: planner.activeLayout?.theme.binderBackground ?? "#0f172a" }}
     >
-      <div className="mx-auto flex min-h-screen max-w-[1700px] flex-col gap-4 px-4 py-4 lg:px-6">
-        <PlannerHeader
-          createNewLayout={planner.createNewLayout}
-          duplicateLayout={planner.duplicateLayout}
-          exportLayouts={planner.exportLayouts}
-          importLayouts={planner.importLayouts}
-          importInputRef={planner.importInputRef}
-        />
+      <PlannerHeader
+        createNewLayout={planner.createNewLayout}
+        duplicateLayout={planner.duplicateLayout}
+        exportLayouts={planner.exportLayouts}
+        importLayouts={planner.importLayouts}
+        importInputRef={planner.importInputRef}
+      />
 
+      <div className="mx-auto flex max-w-[1700px] flex-col gap-4 px-4 py-4 lg:px-6">
         {planner.errorMessage ? (
           <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
             {planner.errorMessage}
