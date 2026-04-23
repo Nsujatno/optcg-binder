@@ -6,6 +6,7 @@ import { InspectorSidebar } from "@/components/planner/inspector-sidebar";
 import { LayoutSidebar } from "@/components/planner/layout-sidebar";
 import { PlannerCanvas } from "@/components/planner/planner-canvas";
 import { PlannerHeader } from "@/components/planner/planner-header";
+import { SetCardsModal } from "@/components/planner/set-cards-modal";
 import { usePlannerState } from "@/hooks/use-planner-state";
 
 export function PlannerApp() {
@@ -33,14 +34,10 @@ export function PlannerApp() {
 
         <div className="grid flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
           <CatalogSidebar
-            setLoading={planner.setLoading}
             sets={planner.sets}
             selectedSetId={planner.selectedSetId}
-            setSelectedSetId={planner.setSelectedSetId}
-            search={planner.search}
-            setSearch={planner.setSearch}
-            cardLoading={planner.cardLoading}
-            cards={planner.cards}
+            setLoading={planner.setLoading}
+            openSetModal={planner.openSetModal}
           />
 
           <PlannerCanvas
@@ -99,6 +96,20 @@ export function PlannerApp() {
         activeTemplate={planner.activeTemplate}
         currentSlotPosition={planner.currentSlotPosition}
         confirmCropPlacement={planner.confirmCropPlacement}
+      />
+
+      <SetCardsModal
+        modalOpen={planner.modalOpen}
+        closeSetModal={planner.closeSetModal}
+        selectedSet={planner.selectedSet}
+        cardLoading={planner.cardLoading}
+        modalError={planner.modalError}
+        filteredCards={planner.filteredCards}
+        modalSearch={planner.modalSearch}
+        setModalSearch={planner.setModalSearch}
+        remainingPageCapacity={planner.remainingPageCapacity}
+        activePagePlacedCardIds={planner.activePagePlacedCardIds}
+        placeCardsInNextEmptySlots={planner.placeCardsInNextEmptySlots}
       />
     </div>
   );

@@ -18,6 +18,7 @@ import {
   matchesCardPlacementId,
   PersistedState,
   sanitizePageForTemplate,
+  slotKey,
   STORAGE_KEY,
 } from "@/lib/planner";
 
@@ -82,6 +83,28 @@ export function useLayoutManager(cards: CardRecord[]) {
     };
   }, [selectedSlotId]);
   const activeLayoutAssets = activeLayout?.assets ?? [];
+  const activePagePlacedCardIds = useMemo(
+    () => Object.values(activePage?.placements ?? {}),
+    [activePage?.placements],
+  );
+  const availableSlotIds = useMemo(() => {
+    if (!activePage) {
+      return [];
+    }
+
+    const slots: string[] = [];
+    for (let row = 0; row < activeTemplate.rows; row += 1) {
+      for (let col = 0; col < activeTemplate.cols; col += 1) {
+        const currentSlotId = slotKey(row, col);
+        if (activePage.placements[currentSlotId] || occupiedByArt.has(currentSlotId)) {
+          continue;
+        }
+        slots.push(currentSlotId);
+      }
+    }
+    return slots;
+  }, [activePage, activeTemplate.cols, activeTemplate.rows, occupiedByArt]);
+  const remainingPageCapacity = availableSlotIds.length;
 
   function updateLayouts(
     updater: (currentLayouts: BinderLayout[]) => BinderLayout[],
@@ -302,6 +325,32 @@ export function useLayoutManager(cards: CardRecord[]) {
     });
   }
 
+  function placeCardsInNextEmptySlots(cardIds: string[]) {
+    if (!activePage || !cardIds.length) {
+      return;
+    }
+
+    const targetSlotIds = availableSlotIds.slice(0, cardIds.length);
+    if (!targetSlotIds.length) {
+      return;
+    }
+
+    updateActivePage((page) => {
+      const nextPlacements = { ...page.placements };
+      targetSlotIds.forEach((targetSlotId, index) => {
+        const cardId = cardIds[index];
+        if (cardId) {
+          nextPlacements[targetSlotId] = cardId;
+        }
+      });
+
+      return {
+        ...page,
+        placements: nextPlacements,
+      };
+    });
+  }
+
   return {
     layouts,
     activeLayoutId,
@@ -323,6 +372,9 @@ export function useLayoutManager(cards: CardRecord[]) {
     occupiedByArt,
     currentSlotPosition,
     activeLayoutAssets,
+    activePagePlacedCardIds,
+    availableSlotIds,
+    remainingPageCapacity,
     updateLayouts,
     updateActiveLayout,
     updateActivePage,
@@ -338,6 +390,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     exportLayouts,
     importLayouts,
     handleCardDrop,
+    placeCardsInNextEmptySlots,
   };
 }
 

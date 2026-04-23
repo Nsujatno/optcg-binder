@@ -1,19 +1,16 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
-import {
-  getCardsBySetClient,
-  getSetsClient,
-  searchCardsClient,
-} from "@/lib/api-client";
+import { useEffect, useMemo, useState } from "react";
+import { getCardsBySetClient, getSetsClient } from "@/lib/api-client";
 import type { CardRecord, SetRecord } from "@/lib/types";
 
 export function useCatalogData() {
   const [sets, setSets] = useState<SetRecord[]>([]);
   const [selectedSetId, setSelectedSetId] = useState<string>("");
-  const [cards, setCards] = useState<CardRecord[]>([]);
-  const [search, setSearch] = useState("");
-  const deferredSearch = useDeferredValue(search);
+  const [cardsBySetId, setCardsBySetId] = useState<Record<string, CardRecord[]>>({});
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalSearch, setModalSearch] = useState("");
+  const [modalError, setModalError] = useState("");
   const [cardLoading, setCardLoading] = useState(false);
   const [setLoading, setSetLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -27,7 +24,6 @@ export function useCatalogData() {
         const payload = await getSetsClient();
         if (!cancelled) {
           setSets(payload.sets);
-          setSelectedSetId((current) => current || payload.sets[0]?.id || "");
         }
       } catch {
         if (!cancelled) {
@@ -46,48 +42,79 @@ export function useCatalogData() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!selectedSetId) {
+  const selectedSet = useMemo(
+    () => sets.find((set) => set.id === selectedSetId) ?? null,
+    [selectedSetId, sets],
+  );
+  const cards = selectedSetId ? cardsBySetId[selectedSetId] ?? [] : [];
+  const filteredCards = useMemo(() => {
+    const query = modalSearch.trim().toLowerCase();
+    if (!query) {
+      return cards;
+    }
+
+    return cards.filter((card) =>
+      [
+        card.name,
+        card.cardSetId,
+        card.color,
+        card.type,
+        card.rarity,
+        card.text,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [cards, modalSearch]);
+  const allLoadedCards = useMemo(
+    () => Object.values(cardsBySetId).flat(),
+    [cardsBySetId],
+  );
+
+  async function openSetModal(setId: string) {
+    setSelectedSetId(setId);
+    setModalSearch("");
+    setModalOpen(true);
+    setModalError("");
+
+    if (cardsBySetId[setId]) {
       return;
     }
 
-    let cancelled = false;
-
-    async function loadCards() {
-      setCardLoading(true);
-      setErrorMessage("");
-      try {
-        const payload = deferredSearch.trim()
-          ? await searchCardsClient(deferredSearch.trim(), selectedSetId)
-          : await getCardsBySetClient(selectedSetId);
-        if (!cancelled) {
-          setCards(payload.cards);
-        }
-      } catch {
-        if (!cancelled) {
-          setErrorMessage("Could not load cards right now.");
-        }
-      } finally {
-        if (!cancelled) {
-          setCardLoading(false);
-        }
-      }
+    setCardLoading(true);
+    try {
+      const payload = await getCardsBySetClient(setId);
+      setCardsBySetId((current) => ({
+        ...current,
+        [setId]: payload.cards,
+      }));
+    } catch {
+      setModalError("Could not load cards for that set right now.");
+    } finally {
+      setCardLoading(false);
     }
+  }
 
-    loadCards();
-    return () => {
-      cancelled = true;
-    };
-  }, [deferredSearch, selectedSetId]);
+  function closeSetModal() {
+    setModalOpen(false);
+    setModalSearch("");
+    setModalError("");
+  }
 
   return {
     sets,
     selectedSetId,
-    setSelectedSetId,
+    selectedSet,
+    openSetModal,
+    closeSetModal,
+    modalOpen,
     cards,
-    search,
-    setSearch,
-    deferredSearch,
+    filteredCards,
+    allLoadedCards,
+    modalSearch,
+    setModalSearch,
+    modalError,
     cardLoading,
     setLoading,
     errorMessage,

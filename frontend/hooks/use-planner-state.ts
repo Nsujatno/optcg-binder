@@ -6,7 +6,7 @@ import { useArtPlacement } from "@/hooks/use-art-placement";
 
 export function usePlannerState() {
   const catalog = useCatalogData();
-  const layout = useLayoutManager(catalog.cards);
+  const layout = useLayoutManager(catalog.allLoadedCards);
   const art = useArtPlacement(layout, catalog.setErrorMessage);
 
   async function importLayouts(event: React.ChangeEvent<HTMLInputElement>) {
