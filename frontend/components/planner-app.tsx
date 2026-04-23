@@ -3,6 +3,7 @@
 import { CatalogSidebar } from "@/components/planner/catalog-sidebar";
 import { CropModal } from "@/components/planner/crop-modal";
 import { InspectorSidebar } from "@/components/planner/inspector-sidebar";
+import { LayoutSidebar } from "@/components/planner/layout-sidebar";
 import { PlannerCanvas } from "@/components/planner/planner-canvas";
 import { PlannerHeader } from "@/components/planner/planner-header";
 import { usePlannerState } from "@/hooks/use-planner-state";
@@ -43,21 +44,9 @@ export function PlannerApp() {
           />
 
           <PlannerCanvas
-            layouts={planner.layouts}
-            activeLayoutId={planner.activeLayoutId}
-            setActiveLayoutId={planner.setActiveLayoutId}
             activeLayout={planner.activeLayout}
             activeTemplate={planner.activeTemplate}
-            activePageIndex={planner.activePageIndex}
-            setActivePageIndex={planner.setActivePageIndex}
             activePage={planner.activePage}
-            renameDraft={planner.renameDraft}
-            setRenameDraft={planner.setRenameDraft}
-            renameLayout={planner.renameLayout}
-            deleteLayout={planner.deleteLayout}
-            setTemplate={planner.setTemplate}
-            addPage={planner.addPage}
-            duplicatePage={planner.duplicatePage}
             activeLayoutAssets={planner.activeLayoutAssets}
             selectedRegionId={planner.selectedRegionId}
             setSelectedRegionId={planner.setSelectedRegionId}
@@ -68,19 +57,39 @@ export function PlannerApp() {
             handleCardDrop={planner.handleCardDrop}
           />
 
-          <InspectorSidebar
-            currentSlotPosition={planner.currentSlotPosition}
-            updateTheme={planner.updateTheme}
-            activeLayout={planner.activeLayout}
-            selectedCard={planner.selectedCard}
-            clearSelectedSlot={planner.clearSelectedSlot}
-            uploadInputRef={planner.uploadInputRef}
-            handleUploadImage={planner.handleUploadImage}
-            selectedRegion={planner.selectedRegion}
-            editSelectedRegion={planner.editSelectedRegion}
-            toggleRegionLock={planner.toggleRegionLock}
-            deleteSelectedRegion={planner.deleteSelectedRegion}
-          />
+          <div className="flex flex-col gap-4">
+            <LayoutSidebar
+              layouts={planner.layouts}
+              activeLayoutId={planner.activeLayoutId}
+              setActiveLayoutId={planner.setActiveLayoutId}
+              activeLayout={planner.activeLayout}
+              activeTemplate={planner.activeTemplate}
+              activePageIndex={planner.activePageIndex}
+              setActivePageIndex={planner.setActivePageIndex}
+              renameDraft={planner.renameDraft}
+              setRenameDraft={planner.setRenameDraft}
+              renameLayout={planner.renameLayout}
+              deleteLayout={planner.deleteLayout}
+              setTemplate={planner.setTemplate}
+              addPage={planner.addPage}
+              duplicatePage={planner.duplicatePage}
+              setSelectedRegionId={planner.setSelectedRegionId}
+            />
+
+            <InspectorSidebar
+              currentSlotPosition={planner.currentSlotPosition}
+              updateTheme={planner.updateTheme}
+              activeLayout={planner.activeLayout}
+              selectedCard={planner.selectedCard}
+              clearSelectedSlot={planner.clearSelectedSlot}
+              uploadInputRef={planner.uploadInputRef}
+              handleUploadImage={planner.handleUploadImage}
+              selectedRegion={planner.selectedRegion}
+              editSelectedRegion={planner.editSelectedRegion}
+              toggleRegionLock={planner.toggleRegionLock}
+              deleteSelectedRegion={planner.deleteSelectedRegion}
+            />
+          </div>
         </div>
       </div>
 

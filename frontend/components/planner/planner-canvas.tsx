@@ -1,5 +1,5 @@
 import type { PlannerState } from "@/hooks/use-planner-state";
-import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
+import { DEFAULT_THEME } from "@/lib/types";
 import {
   CARD_SLOT_HEIGHT,
   CARD_SLOT_WIDTH,
@@ -11,21 +11,9 @@ import {
 
 type PlannerCanvasProps = Pick<
   PlannerState,
-  | "layouts"
-  | "activeLayoutId"
-  | "setActiveLayoutId"
   | "activeLayout"
   | "activeTemplate"
-  | "activePageIndex"
-  | "setActivePageIndex"
   | "activePage"
-  | "renameDraft"
-  | "setRenameDraft"
-  | "renameLayout"
-  | "deleteLayout"
-  | "setTemplate"
-  | "addPage"
-  | "duplicatePage"
   | "activeLayoutAssets"
   | "selectedRegionId"
   | "setSelectedRegionId"
@@ -37,21 +25,9 @@ type PlannerCanvasProps = Pick<
 >;
 
 export function PlannerCanvas({
-  layouts,
-  activeLayoutId,
-  setActiveLayoutId,
   activeLayout,
   activeTemplate,
-  activePageIndex,
-  setActivePageIndex,
   activePage,
-  renameDraft,
-  setRenameDraft,
-  renameLayout,
-  deleteLayout,
-  setTemplate,
-  addPage,
-  duplicatePage,
   activeLayoutAssets,
   selectedRegionId,
   setSelectedRegionId,
@@ -72,106 +48,6 @@ export function PlannerCanvas({
 
   return (
     <main className="rounded-[32px] border border-white/10 bg-slate-950/50 p-4 backdrop-blur">
-      <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="min-w-0">
-          <label className="text-xs uppercase tracking-[0.25em] text-slate-400">
-            Active layout
-          </label>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <select
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm"
-              onChange={(event) => {
-                setActiveLayoutId(event.target.value);
-                setActivePageIndex(0);
-                setSelectedRegionId(null);
-              }}
-              value={activeLayoutId}
-            >
-              {layouts.map((layout) => (
-                <option key={layout.id} value={layout.id}>
-                  {layout.name}
-                </option>
-              ))}
-            </select>
-            <input
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm"
-              onChange={(event) => setRenameDraft(event.target.value)}
-              placeholder={activeLayout?.name ?? "Rename layout"}
-              value={renameDraft}
-            />
-            <button
-              className="rounded-full border border-white/10 px-4 py-2 text-sm"
-              onClick={renameLayout}
-              type="button"
-            >
-              Rename
-            </button>
-            <button
-              className="rounded-full border border-rose-400/40 px-4 py-2 text-sm text-rose-200"
-              onClick={deleteLayout}
-              type="button"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {BINDER_TEMPLATES.map((template) => (
-            <button
-              key={template.id}
-              className={`rounded-full px-4 py-2 text-sm transition ${
-                activeLayout?.templateId === template.id
-                  ? "bg-cyan-300 text-slate-950"
-                  : "border border-white/10 bg-white/5"
-              }`}
-              onClick={() => setTemplate(template.id)}
-              type="button"
-            >
-              {template.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <button
-          className="rounded-full border border-white/10 px-4 py-2 text-sm"
-          onClick={() => setActivePageIndex((index) => Math.max(0, index - 1))}
-          type="button"
-        >
-          Previous page
-        </button>
-        <span className="rounded-full bg-white/5 px-4 py-2 text-sm">
-          Page {activePageIndex + 1} / {activeLayout?.pages.length ?? 0}
-        </span>
-        <button
-          className="rounded-full border border-white/10 px-4 py-2 text-sm"
-          onClick={() =>
-            setActivePageIndex((index) =>
-              Math.min((activeLayout?.pages.length ?? 1) - 1, index + 1),
-            )
-          }
-          type="button"
-        >
-          Next page
-        </button>
-        <button
-          className="rounded-full border border-white/10 px-4 py-2 text-sm"
-          onClick={addPage}
-          type="button"
-        >
-          Add page
-        </button>
-        <button
-          className="rounded-full border border-white/10 px-4 py-2 text-sm"
-          onClick={duplicatePage}
-          type="button"
-        >
-          Duplicate page
-        </button>
-      </div>
-
       <div className="overflow-auto pb-2">
         <div
           className="mx-auto grid rounded-[36px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
