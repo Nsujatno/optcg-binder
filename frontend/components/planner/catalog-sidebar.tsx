@@ -22,7 +22,7 @@ export function CatalogSidebar({
         </div>
       </div>
 
-      <div className="max-h-[70vh] space-y-2 overflow-y-auto pr-1">
+      <div className="planner-scrollbar max-h-[70vh] space-y-2 overflow-y-auto pr-1">
         {sets.map((set) => (
           <button
             key={set.id}
