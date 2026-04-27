@@ -1,17 +1,9 @@
 import type { PlannerState } from "@/hooks/use-planner-state";
-import {
-  BINDER_BACKGROUNDS,
-  formatPrice,
-  PAGE_BACKGROUNDS,
-  SLOT_ACCENTS,
-  slotLabel,
-} from "@/lib/planner";
+import { formatPrice, slotLabel } from "@/lib/planner";
 
 type InspectorSidebarProps = Pick<
   PlannerState,
   | "currentSlotPosition"
-  | "updateTheme"
-  | "activeLayout"
   | "selectedCard"
   | "clearSelectedSlot"
   | "uploadInputRef"
@@ -24,8 +16,6 @@ type InspectorSidebarProps = Pick<
 
 export function InspectorSidebar({
   currentSlotPosition,
-  updateTheme,
-  activeLayout,
   selectedCard,
   clearSelectedSlot,
   uploadInputRef,
@@ -45,75 +35,6 @@ export function InspectorSidebar({
       </div>
 
       <div className="space-y-6">
-        <section>
-          <h3 className="mb-3 text-xs uppercase tracking-[0.25em] text-slate-400">
-            Theme
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <p className="mb-2 text-sm text-slate-300">Binder background</p>
-              <div className="flex flex-wrap gap-2">
-                {BINDER_BACKGROUNDS.map((color) => (
-                  <button
-                    key={color}
-                    className="h-9 w-9 rounded-full border border-white/15"
-                    onClick={() => updateTheme("binderBackground", color)}
-                    style={{ backgroundColor: color }}
-                    type="button"
-                  />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-slate-300">Page background</p>
-              <div className="flex flex-wrap gap-2">
-                {PAGE_BACKGROUNDS.map((color) => (
-                  <button
-                    key={color}
-                    className="h-9 w-9 rounded-full border border-white/15"
-                    onClick={() => updateTheme("pageBackground", color)}
-                    style={{ backgroundColor: color }}
-                    type="button"
-                  />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-slate-300">Slot accent</p>
-              <div className="flex flex-wrap gap-2">
-                {SLOT_ACCENTS.map((color) => (
-                  <button
-                    key={color}
-                    className="h-9 w-9 rounded-full border border-white/15"
-                    onClick={() => updateTheme("slotAccent", color)}
-                    style={{ backgroundColor: color }}
-                    type="button"
-                  />
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-sm text-slate-300">Empty slot style</p>
-              <div className="flex gap-2">
-                {(["solid", "dashed", "glass"] as const).map((style) => (
-                  <button
-                    key={style}
-                    className={`rounded-full border px-3 py-2 text-sm ${
-                      activeLayout?.theme.emptySlotStyle === style
-                        ? "border-cyan-300 bg-cyan-300/10"
-                        : "border-white/10 bg-white/5"
-                    }`}
-                    onClick={() => updateTheme("emptySlotStyle", style)}
-                    type="button"
-                  >
-                    {style}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section>
           <h3 className="mb-3 text-xs uppercase tracking-[0.25em] text-slate-400">
             Card slot
