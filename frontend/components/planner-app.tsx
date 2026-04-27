@@ -44,10 +44,12 @@ export function PlannerApp() {
             activeLayout={planner.activeLayout}
             activeTemplate={planner.activeTemplate}
             activePage={planner.activePage}
+            activePageIndex={planner.activePageIndex}
             activeLayoutAssets={planner.activeLayoutAssets}
             selectedRegionId={planner.selectedRegionId}
             setSelectedRegionId={planner.setSelectedRegionId}
             setSelectedSlotId={planner.setSelectedSlotId}
+            setActivePageIndex={planner.setActivePageIndex}
             cards={planner.allLoadedCards}
             occupiedByArt={planner.occupiedByArt}
             selectedSlotId={planner.selectedSlotId}

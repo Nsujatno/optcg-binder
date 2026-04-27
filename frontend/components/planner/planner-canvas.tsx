@@ -14,10 +14,12 @@ type PlannerCanvasProps = Pick<
   | "activeLayout"
   | "activeTemplate"
   | "activePage"
+  | "activePageIndex"
   | "activeLayoutAssets"
   | "selectedRegionId"
   | "setSelectedRegionId"
   | "setSelectedSlotId"
+  | "setActivePageIndex"
   | "cards"
   | "occupiedByArt"
   | "selectedSlotId"
@@ -28,15 +30,20 @@ export function PlannerCanvas({
   activeLayout,
   activeTemplate,
   activePage,
+  activePageIndex,
   activeLayoutAssets,
   selectedRegionId,
   setSelectedRegionId,
   setSelectedSlotId,
+  setActivePageIndex,
   cards,
   occupiedByArt,
   selectedSlotId,
   handleCardDrop,
 }: PlannerCanvasProps) {
+  const totalPages = activeLayout?.pages.length ?? 0;
+  const canGoPreviousPage = activePageIndex > 0;
+  const canGoNextPage = activePageIndex < totalPages - 1;
   const pageWidth =
     activeTemplate.cols * CARD_SLOT_WIDTH +
     (activeTemplate.cols - 1) * PAGE_GRID_GAP +
@@ -48,7 +55,43 @@ export function PlannerCanvas({
 
   return (
     <main className="rounded-[32px] border border-white/10 bg-slate-950/50 p-4 backdrop-blur">
-      <div className="overflow-auto pb-2">
+      <div className="relative overflow-auto pt-8 pb-2">
+        {totalPages > 1 ? (
+          <button
+            className={`absolute top-1/2 left-2 z-40 -translate-y-1/2 rounded-full border px-3 py-2 text-xl leading-none backdrop-blur transition ${
+              canGoPreviousPage
+                ? "border-white/20 bg-slate-950/75 text-white hover:bg-slate-950"
+                : "cursor-not-allowed border-white/10 bg-slate-950/45 text-slate-500"
+            }`}
+            disabled={!canGoPreviousPage}
+            onClick={() =>
+              setActivePageIndex((index) => Math.max(0, index - 1))
+            }
+            type="button"
+          >
+            ‹
+          </button>
+        ) : null}
+
+        {totalPages > 1 ? (
+          <button
+            className={`absolute top-1/2 right-2 z-40 -translate-y-1/2 rounded-full border px-3 py-2 text-xl leading-none backdrop-blur transition ${
+              canGoNextPage
+                ? "border-white/20 bg-slate-950/75 text-white hover:bg-slate-950"
+                : "cursor-not-allowed border-white/10 bg-slate-950/45 text-slate-500"
+            }`}
+            disabled={!canGoNextPage}
+            onClick={() =>
+              setActivePageIndex((index) =>
+                Math.min(totalPages - 1, index + 1),
+              )
+            }
+            type="button"
+          >
+            ›
+          </button>
+        ) : null}
+
         <div
           className="mx-auto grid rounded-[30px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
           style={{

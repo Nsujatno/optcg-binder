@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PlannerState } from "@/hooks/use-planner-state";
 import {
   BINDER_BACKGROUNDS,
@@ -52,6 +52,33 @@ export function LayoutStyleSidebar({
   updateTheme,
 }: LayoutStyleSidebarProps) {
   const [activeTab, setActiveTab] = useState<"layout" | "style">("layout");
+  const [isLayoutMenuOpen, setIsLayoutMenuOpen] = useState(false);
+  const layoutMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (!layoutMenuRef.current) {
+        return;
+      }
+
+      if (!layoutMenuRef.current.contains(event.target as Node)) {
+        setIsLayoutMenuOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsLayoutMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   return (
     <aside className="rounded-[28px] border border-white/10 bg-slate-950/55 p-4 backdrop-blur">
@@ -95,21 +122,60 @@ export function LayoutStyleSidebar({
               Active layout
             </h3>
             <div className="space-y-3">
-              <select
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
-                onChange={(event) => {
-                  setActiveLayoutId(event.target.value);
-                  setActivePageIndex(0);
-                  setSelectedRegionId(null);
-                }}
-                value={activeLayoutId}
-              >
-                {layouts.map((layout) => (
-                  <option key={layout.id} value={layout.id}>
-                    {layout.name}
-                  </option>
-                ))}
-              </select>
+              <div ref={layoutMenuRef} className="relative">
+                <button
+                  aria-expanded={isLayoutMenuOpen}
+                  aria-haspopup="listbox"
+                  className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-left text-sm text-slate-100 transition hover:bg-white/10"
+                  onClick={() => setIsLayoutMenuOpen((current) => !current)}
+                  type="button"
+                >
+                  <span className="truncate">{activeLayout?.name ?? "Select layout"}</span>
+                  <span
+                    className={`text-xs text-slate-400 transition ${
+                      isLayoutMenuOpen ? "rotate-180" : ""
+                    }`}
+                  >
+                    v
+                  </span>
+                </button>
+
+                {isLayoutMenuOpen ? (
+                  <div className="absolute z-50 mt-2 w-full rounded-2xl border border-white/10 bg-slate-950/95 p-2 shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur">
+                    <div className="planner-scrollbar max-h-64 overflow-y-auto pr-1" role="listbox">
+                      {layouts.map((layout) => {
+                        const isActive = layout.id === activeLayoutId;
+
+                        return (
+                          <button
+                            key={layout.id}
+                            className={`mb-1 flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition last:mb-0 ${
+                              isActive
+                                ? "bg-cyan-300/15 text-cyan-200"
+                                : "text-slate-200 hover:bg-white/5"
+                            }`}
+                            onClick={() => {
+                              setActiveLayoutId(layout.id);
+                              setActivePageIndex(0);
+                              setSelectedRegionId(null);
+                              setIsLayoutMenuOpen(false);
+                            }}
+                            role="option"
+                            type="button"
+                          >
+                            <span className="truncate">{layout.name}</span>
+                            {isActive ? (
+                              <span className="text-[11px] uppercase tracking-[0.18em] text-cyan-200">
+                                Active
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
               <input
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm"
                 onChange={(event) => setRenameDraft(event.target.value)}
@@ -184,24 +250,6 @@ export function LayoutStyleSidebar({
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                className="rounded-full border border-white/10 px-4 py-2 text-sm"
-                onClick={() => setActivePageIndex((index) => Math.max(0, index - 1))}
-                type="button"
-              >
-                Previous
-              </button>
-              <button
-                className="rounded-full border border-white/10 px-4 py-2 text-sm"
-                onClick={() =>
-                  setActivePageIndex((index) =>
-                    Math.min((activeLayout?.pages.length ?? 1) - 1, index + 1),
-                  )
-                }
-                type="button"
-              >
-                Next
-              </button>
               <button
                 className="rounded-full border border-white/10 px-4 py-2 text-sm"
                 onClick={addPage}
