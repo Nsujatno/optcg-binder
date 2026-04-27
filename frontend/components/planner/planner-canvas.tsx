@@ -160,12 +160,7 @@ export function PlannerCanvas({
                       className="absolute inset-0 h-full w-full object-cover"
                       src={placedCard.imageUrl}
                     />
-                  ) : (
-                    <div className="absolute inset-0 flex items-end justify-between p-3 text-[11px] uppercase tracking-[0.18em] text-slate-100">
-                      <span>{row + 1}</span>
-                      <span>{col + 1}</span>
-                    </div>
-                  )}
+                  ) : null}
 
                   {artRegion && !placedCard ? (
                     <div className="absolute inset-0 border border-white/15" />

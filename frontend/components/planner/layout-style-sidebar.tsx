@@ -5,9 +5,8 @@ import type { PlannerState } from "@/hooks/use-planner-state";
 import {
   BINDER_BACKGROUNDS,
   PAGE_BACKGROUNDS,
-  SLOT_ACCENTS,
 } from "@/lib/planner";
-import { BINDER_TEMPLATES, type EmptySlotStyle } from "@/lib/types";
+import { BINDER_TEMPLATES } from "@/lib/types";
 import { ThemeColorControl } from "@/components/planner/theme-color-control";
 
 type LayoutStyleSidebarProps = Pick<
@@ -31,8 +30,6 @@ type LayoutStyleSidebarProps = Pick<
   | "templateErrorMessage"
   | "updateTheme"
 >;
-
-const EMPTY_SLOT_STYLES: EmptySlotStyle[] = ["solid", "dashed", "glass"];
 
 export function LayoutStyleSidebar({
   layouts,
@@ -238,35 +235,7 @@ export function LayoutStyleSidebar({
             themeKey="pageBackground"
             value={activeLayout?.theme.pageBackground ?? PAGE_BACKGROUNDS[0]}
           />
-          <ThemeColorControl
-            label="Slot accent"
-            onChange={(color) => updateTheme("slotAccent", color)}
-            presetColors={SLOT_ACCENTS}
-            themeKey="slotAccent"
-            value={activeLayout?.theme.slotAccent ?? SLOT_ACCENTS[0]}
-          />
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-4">
-            <h3 className="mb-3 text-xs uppercase tracking-[0.25em] text-slate-400">
-              Empty slot style
-            </h3>
-            <div className="flex gap-2">
-              {EMPTY_SLOT_STYLES.map((style) => (
-                <button
-                  key={style}
-                  className={`rounded-full border px-3 py-2 text-sm ${
-                    activeLayout?.theme.emptySlotStyle === style
-                      ? "border-cyan-300 bg-cyan-300/10"
-                      : "border-white/10 bg-white/5"
-                  }`}
-                  onClick={() => updateTheme("emptySlotStyle", style)}
-                  type="button"
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </section>
         </div>
       )}
     </aside>

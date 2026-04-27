@@ -210,7 +210,16 @@ export function loadPersistedState(): PersistedState {
       return { layouts: [layout], activeLayoutId: layout.id };
     }
 
-    return parsed;
+    return {
+      ...parsed,
+      layouts: parsed.layouts.map((layout) => ({
+        ...layout,
+        theme: {
+          ...layout.theme,
+          emptySlotStyle: "glass",
+        },
+      })),
+    };
   } catch {
     const layout = createLayout();
     return { layouts: [layout], activeLayoutId: layout.id };
