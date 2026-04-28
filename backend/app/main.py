@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 import httpx
 from fastapi import FastAPI, Query
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
@@ -14,6 +14,7 @@ from .optcg_client import OptcgClient
 
 settings = get_settings()
 client = OptcgClient(settings.optcg_api_base)
+allowed_card_image_hosts = {"optcgapi.com", "www.optcgapi.com"}
 
 app = FastAPI()
 
@@ -58,41 +59,32 @@ async def get_market_price(card_id: str) -> MarketPriceResponse:
 async def get_card_image(url: str = Query(...)) -> Response:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
-        return Response(
-            content=b'{"error":"Unsupported image URL protocol."}',
-            status_code=400,
-            media_type="application/json",
-        )
+        return JSONResponse({"error": "Unsupported image URL protocol."}, status_code=400)
+
+    if parsed.hostname not in allowed_card_image_hosts:
+        return JSONResponse({"error": "Image host is not allowed."}, status_code=400)
 
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=20.0) as http_client:
+        async with httpx.AsyncClient(follow_redirects=False, timeout=20.0) as http_client:
             upstream_response = await http_client.get(
                 url,
                 headers={"Accept": "image/*,*/*;q=0.8"},
             )
     except httpx.HTTPError:
-        return Response(
-            content=b'{"error":"Could not fetch remote image."}',
-            status_code=502,
-            media_type="application/json",
-        )
+        return JSONResponse({"error": "Could not fetch remote image."}, status_code=502)
 
     content_type = upstream_response.headers.get("content-type", "")
+    if 300 <= upstream_response.status_code < 400:
+        return JSONResponse({"error": "Redirected image URLs are not allowed."}, status_code=502)
+
     if upstream_response.status_code != 200:
-        return Response(
-            content=(
-                f'{{"error":"Remote image request failed with {upstream_response.status_code}."}}'
-            ).encode("utf-8"),
+        return JSONResponse(
+            {"error": f"Remote image request failed with {upstream_response.status_code}."},
             status_code=502,
-            media_type="application/json",
         )
 
     if not content_type.startswith("image/"):
-        return Response(
-            content=b'{"error":"Remote URL did not return an image."}',
-            status_code=415,
-            media_type="application/json",
-        )
+        return JSONResponse({"error": "Remote URL did not return an image."}, status_code=415)
 
     return Response(
         content=upstream_response.content,

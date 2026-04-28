@@ -8,10 +8,10 @@ export function useCatalogData() {
   const [sets, setSets] = useState<SetRecord[]>([]);
   const [selectedSetId, setSelectedSetId] = useState<string>("");
   const [cardsBySetId, setCardsBySetId] = useState<Record<string, CardRecord[]>>({});
+  const [loadingBySetId, setLoadingBySetId] = useState<Record<string, boolean>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSearch, setModalSearch] = useState("");
   const [modalError, setModalError] = useState("");
-  const [cardLoading, setCardLoading] = useState(false);
   const [setLoading, setSetLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -47,6 +47,7 @@ export function useCatalogData() {
     [selectedSetId, sets],
   );
   const cards = selectedSetId ? cardsBySetId[selectedSetId] ?? [] : [];
+  const cardLoading = selectedSetId ? loadingBySetId[selectedSetId] ?? false : false;
   const filteredCards = useMemo(() => {
     const query = modalSearch.trim().toLowerCase();
     if (!query) {
@@ -82,7 +83,14 @@ export function useCatalogData() {
       return;
     }
 
-    setCardLoading(true);
+    if (loadingBySetId[setId]) {
+      return;
+    }
+
+    setLoadingBySetId((current) => ({
+      ...current,
+      [setId]: true,
+    }));
     try {
       const payload = await getCardsBySetClient(setId);
       setCardsBySetId((current) => ({
@@ -92,7 +100,10 @@ export function useCatalogData() {
     } catch {
       setModalError("Could not load cards for that set right now.");
     } finally {
-      setCardLoading(false);
+      setLoadingBySetId((current) => ({
+        ...current,
+        [setId]: false,
+      }));
     }
   }
 
