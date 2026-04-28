@@ -9,9 +9,12 @@ type PlannerHeaderProps = Pick<
   | "exportLayouts"
   | "importLayouts"
   | "importInputRef"
->;
+> & {
+  openDownloadModal: () => void;
+};
 
 const menuItems = [
+  { label: "Download", action: "download", tone: "default" as const },
   { label: "Export JSON", action: "export", tone: "default" as const },
   { label: "Import JSON", action: "import", tone: "default" as const },
 ];
@@ -20,6 +23,7 @@ export function PlannerHeader({
   exportLayouts,
   importLayouts,
   importInputRef,
+  openDownloadModal,
 }: PlannerHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +56,11 @@ export function PlannerHeader({
 
   const handleMenuAction = (action: (typeof menuItems)[number]["action"]) => {
     setMenuOpen(false);
+
+    if (action === "download") {
+      openDownloadModal();
+      return;
+    }
 
     if (action === "export") {
       exportLayouts();

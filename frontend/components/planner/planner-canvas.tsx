@@ -184,22 +184,26 @@ export function PlannerCanvas({
                     }}
                   />
                   <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0" />
-                  <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[11px] uppercase tracking-[0.18em] text-white">
-                    {region.colSpan} x {region.rowSpan}
-                  </div>
+                  {selectedRegionId === region.id ? (
+                    <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[11px] uppercase tracking-[0.18em] text-white">
+                      {region.colSpan} x {region.rowSpan}
+                    </div>
+                  ) : null}
                 </button>
 
-                <button
-                  aria-label="Remove Meechi art"
-                  className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    deleteRegionById(region.id);
-                  }}
-                  type="button"
-                >
-                  x
-                </button>
+                {selectedRegionId === region.id ? (
+                  <button
+                    aria-label="Remove Meechi art"
+                    className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      deleteRegionById(region.id);
+                    }}
+                    type="button"
+                  >
+                    x
+                  </button>
+                ) : null}
               </div>
             );
           })}
