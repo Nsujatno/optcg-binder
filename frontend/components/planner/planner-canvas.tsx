@@ -265,11 +265,6 @@ export function PlannerCanvas({
                         return;
                       }
 
-                      if (selectedRegionId && !placedCard && !artRegion) {
-                        setSelectedSlotId(key);
-                        return;
-                      }
-
                       setSelectedSlotId(key);
                       setSelectedRegionId(artRegion?.id ?? null);
                     }}

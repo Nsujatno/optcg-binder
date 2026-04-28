@@ -1,5 +1,5 @@
 import type { PlannerState } from "@/hooks/use-planner-state";
-import { formatPrice, slotLabel } from "@/lib/planner";
+import { formatPrice } from "@/lib/planner";
 
 type InspectorSidebarProps = Pick<
   PlannerState,
@@ -22,9 +22,6 @@ export function InspectorSidebar({
           <div className="flex items-start justify-between gap-3">
             <div>
               <h4 className="font-semibold">Meechi art</h4>
-              <p className="mt-1 text-xs text-slate-400">
-                Selected origin: {slotLabel(selectedRegion.originRow, selectedRegion.originCol)}
-              </p>
               <p className="mt-3 text-xs text-slate-400">
                 Span: {selectedRegion.colSpan} x {selectedRegion.rowSpan}
               </p>
