@@ -158,6 +158,11 @@ export function PlannerApp() {
         onDownload={handleDownload}
         open={downloadModalOpen}
       />
+
+      <footer className="mx-auto w-full max-w-[1700px] px-4 pb-6 text-center text-xs text-slate-400 lg:px-6">
+        Card art and One Piece-related assets belong to Eiichiro Oda, Bandai, Shonen Jump, and
+        Viz Media. Special thanks to domoslime for the API support.
+      </footer>
     </div>
   );
 }
