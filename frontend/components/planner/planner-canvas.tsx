@@ -28,6 +28,7 @@ type PlannerCanvasProps = Pick<
   | "occupiedByArt"
   | "selectedSlotId"
   | "handleCardDrop"
+  | "handleArtRegionDrop"
 >;
 
 export function PlannerCanvas({
@@ -48,6 +49,7 @@ export function PlannerCanvas({
   occupiedByArt,
   selectedSlotId,
   handleCardDrop,
+  handleArtRegionDrop,
 }: PlannerCanvasProps) {
   function startDraggingCursor() {
     if (typeof document === "undefined") {
@@ -160,6 +162,7 @@ export function PlannerCanvas({
               >
                 <button
                   className="absolute inset-0"
+                  draggable
                   onClick={(event) => {
                     event.stopPropagation();
                     const regionSlotId = slotKey(region.originRow, region.originCol);
@@ -172,6 +175,12 @@ export function PlannerCanvas({
                     setSelectedRegionId(region.id);
                     setSelectedSlotId(regionSlotId);
                   }}
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData("application/x-art-region-id", region.id);
+                    event.dataTransfer.effectAllowed = "move";
+                    startDraggingCursor();
+                  }}
+                  onDragEnd={stopDraggingCursor}
                   type="button"
                 >
                   <img
@@ -260,6 +269,14 @@ export function PlannerCanvas({
                       setSelectedRegionId(artRegion?.id ?? null);
                     }}
                     onDragOver={(event) => {
+                      const isArtDrag = event.dataTransfer.types.includes("application/x-art-region-id");
+                      if (isArtDrag) {
+                        if (!placedCard && !artRegion) {
+                          event.preventDefault();
+                        }
+                        return;
+                      }
+
                       if (!artRegion?.locked) {
                         event.preventDefault();
                       }
@@ -275,6 +292,12 @@ export function PlannerCanvas({
                     }}
                     onDragEnd={stopDraggingCursor}
                     onDrop={(event) => {
+                      if (event.dataTransfer.types.includes("application/x-art-region-id")) {
+                        handleArtRegionDrop(event, key);
+                        stopDraggingCursor();
+                        return;
+                      }
+
                       handleCardDrop(event, key);
                       stopDraggingCursor();
                     }}
@@ -302,7 +325,11 @@ export function PlannerCanvas({
                     <button
                       aria-label="Upload Meechi art"
                       className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
-                      onClick={() => uploadInputRef.current?.click()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedSlotId(key);
+                        uploadInputRef.current?.click();
+                      }}
                       type="button"
                     >
                       <svg

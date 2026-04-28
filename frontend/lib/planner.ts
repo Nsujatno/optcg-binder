@@ -9,6 +9,7 @@ import type {
   UploadedAsset,
 } from "@/lib/types";
 import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
+import { countOccupiedSlots, resizePageForTemplate } from "@/lib/template-resize";
 
 export const STORAGE_KEY = "one-piece-binder.layouts.v1";
 export const CARD_SLOT_WIDTH = 206;
@@ -97,20 +98,11 @@ export function createLayout(
 
 export function sanitizePageForTemplate(
   page: BinderPage,
-  template: BinderTemplate,
+  sourceTemplate: BinderTemplate,
+  targetTemplate: BinderTemplate = sourceTemplate,
 ): BinderPage {
-  const placedCardIds = getOrderedPlacementIds(page);
-  const placements = Object.fromEntries(
-    getTemplateSlotIds(template).slice(0, placedCardIds.length).map((slotId, index) => [
-      slotId,
-      placedCardIds[index],
-    ]),
-  );
-
-  return {
-    ...page,
-    placements,
-  };
+  const resizeResult = resizePageForTemplate(page, sourceTemplate, targetTemplate);
+  return resizeResult.canApply ? resizeResult.page : page;
 }
 
 export function getTemplateSlotIds(template: BinderTemplate) {
@@ -138,14 +130,14 @@ export function doesArtRegionFitTemplate(region: ArtRegion, template: BinderTemp
 
 export function validatePageForTemplate(
   page: BinderPage,
+  sourceTemplate: BinderTemplate,
   template: BinderTemplate,
 ): TemplateResizeValidation {
-  const cardCount = Object.keys(page.placements).length;
+  const cardCount = countOccupiedSlots(page);
   const templateCapacity = template.rows * template.cols;
   const hasTooManyCards = cardCount > templateCapacity;
-  const hasOutOfBoundsArt = page.artRegions.some(
-    (region) => !doesArtRegionFitTemplate(region, template),
-  );
+  const resizeResult = resizePageForTemplate(page, sourceTemplate, template);
+  const hasOutOfBoundsArt = !resizeResult.canApply;
 
   if (hasTooManyCards) {
     return {
@@ -165,7 +157,7 @@ export function validatePageForTemplate(
       templateCapacity,
       hasTooManyCards,
       hasOutOfBoundsArt,
-      reason: "A Meechi art region would fall outside the page bounds.",
+      reason: resizeResult.reason ?? "Current cards and Meechi art cannot fit this template.",
     };
   }
 

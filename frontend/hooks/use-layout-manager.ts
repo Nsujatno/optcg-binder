@@ -155,6 +155,7 @@ export function useLayoutManager(cards: CardRecord[]) {
       BinderTemplateId,
       ReturnType<typeof validatePageForTemplate>
     >();
+    const sourceTemplate = activeTemplate;
     const pageToValidate = activePage ?? {
       id: "",
       placements: {},
@@ -164,7 +165,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     BINDER_TEMPLATES.forEach((template) => {
       entries.set(
         template.id,
-        validatePageForTemplate(pageToValidate, template),
+        validatePageForTemplate(pageToValidate, sourceTemplate, template),
       );
     });
 
@@ -307,7 +308,7 @@ export function useLayoutManager(cards: CardRecord[]) {
       return;
     }
 
-    const validation = validatePageForTemplate(activePage, template);
+    const validation = validatePageForTemplate(activePage, activeTemplate, template);
     if (!validation.canApply) {
       setTemplateErrorMessage(
         validation.reason
@@ -322,7 +323,9 @@ export function useLayoutManager(cards: CardRecord[]) {
       ...layout,
       templateId,
       pages: layout.pages.map((page, index) =>
-        index === activePageIndex ? sanitizePageForTemplate(page, template) : page,
+        index === activePageIndex
+          ? sanitizePageForTemplate(page, activeTemplate, template)
+          : page,
       ),
     }));
     setSelectedRegionId(null);

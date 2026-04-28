@@ -88,6 +88,7 @@ export function PlannerApp() {
             occupiedByArt={planner.occupiedByArt}
             selectedSlotId={planner.selectedSlotId}
             handleCardDrop={planner.handleCardDrop}
+            handleArtRegionDrop={planner.handleArtRegionDrop}
           />
 
           <div className="flex flex-col gap-4">
@@ -114,9 +115,12 @@ export function PlannerApp() {
               updateTheme={planner.updateTheme}
             />
 
-            {planner.selectedCard ? (
+            {planner.selectedCard || planner.selectedRegion ? (
               <InspectorSidebar
                 selectedCard={planner.selectedCard}
+                selectedRegion={planner.selectedRegion}
+                editSelectedRegion={planner.editSelectedRegion}
+                deleteSelectedRegion={planner.deleteSelectedRegion}
               />
             ) : null}
           </div>
