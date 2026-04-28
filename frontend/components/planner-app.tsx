@@ -18,8 +18,6 @@ export function PlannerApp() {
       style={{ backgroundColor: planner.activeLayout?.theme.binderBackground ?? "#0f172a" }}
     >
       <PlannerHeader
-        createNewLayout={planner.createNewLayout}
-        duplicateLayout={planner.duplicateLayout}
         exportLayouts={planner.exportLayouts}
         importLayouts={planner.importLayouts}
         importInputRef={planner.importInputRef}
@@ -69,6 +67,8 @@ export function PlannerApp() {
               setRenameDraft={planner.setRenameDraft}
               renameLayout={planner.renameLayout}
               deleteLayout={planner.deleteLayout}
+              createNewLayout={planner.createNewLayout}
+              duplicateLayout={planner.duplicateLayout}
               setTemplate={planner.setTemplate}
               addPage={planner.addPage}
               duplicatePage={planner.duplicatePage}

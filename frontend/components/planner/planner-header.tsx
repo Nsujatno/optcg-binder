@@ -6,23 +6,17 @@ import type { PlannerState } from "@/hooks/use-planner-state";
 
 type PlannerHeaderProps = Pick<
   PlannerState,
-  | "createNewLayout"
-  | "duplicateLayout"
   | "exportLayouts"
   | "importLayouts"
   | "importInputRef"
 >;
 
 const menuItems = [
-  { label: "New layout", action: "create", tone: "primary" as const },
-  { label: "Duplicate layout", action: "duplicate", tone: "default" as const },
   { label: "Export JSON", action: "export", tone: "default" as const },
   { label: "Import JSON", action: "import", tone: "default" as const },
 ];
 
 export function PlannerHeader({
-  createNewLayout,
-  duplicateLayout,
   exportLayouts,
   importLayouts,
   importInputRef,
@@ -58,16 +52,6 @@ export function PlannerHeader({
 
   const handleMenuAction = (action: (typeof menuItems)[number]["action"]) => {
     setMenuOpen(false);
-
-    if (action === "create") {
-      createNewLayout();
-      return;
-    }
-
-    if (action === "duplicate") {
-      duplicateLayout();
-      return;
-    }
 
     if (action === "export") {
       exportLayouts();
