@@ -13,9 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "One Piece TCG Binder Planner",
+  title: "OPTCG Binder",
   description:
     "Plan One Piece TCG binder layouts with drag and drop cards, custom themes, and Meechi-style multi-slot artwork.",
+  icons: {
+    icon: "/test.png",
+  },
 };
 
 export default function RootLayout({
