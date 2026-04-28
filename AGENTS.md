@@ -75,7 +75,21 @@ Defines the product requirements and implementation direction for the One Piece 
 Documents the current repository structure and the role of the main files. It exists to help future contributors and coding agents orient themselves quickly.
 
 ### [package.json](C:/Users/natha/one-piece-binder/package.json)
-Defines the workspace-level scripts and provides a single entry point for running the Next.js frontend and the active Python backend service in `backend1`.
+Defines the workspace-level scripts and provides a single entry point for running the Next.js frontend and the active Python backend service in `backend`.
+
+## Deployment Notes
+
+### Vercel (Serverless)
+The project is deployed on Vercel using serverless functions. The backend cache is process-local in-memory state, so it is not durable or shared across instances.
+
+- Cached entries are available only while the same warm serverless instance handles requests.
+- Cache is lost when an instance is recycled/spins down, when requests land on a different instance, or after a deployment.
+- Current TTLs in `backend/app/optcg_client.py` are:
+  - Sets: 1 hour
+  - Cards by set: 1 hour
+  - Search results: 15 minutes
+  - Market price: 1 day
+  - All-set cards: 1 hour
 
 ## Frontend App
 
@@ -141,23 +155,23 @@ Provides typed frontend wrappers for calling the separate backend service. Its r
 
 ## Backend Service
 
-### [backend1/requirements.txt](C:/Users/natha/one-piece-binder/backend1/requirements.txt)
+### [backend/requirements.txt](C:/Users/natha/one-piece-binder/backend/requirements.txt)
 Lists the Python packages required to run the active backend service: FastAPI, Uvicorn, and HTTPX.
 
-### [backend1/.env.example](C:/Users/natha/one-piece-binder/backend1/.env.example)
+### [backend/.env.example](C:/Users/natha/one-piece-binder/backend/.env.example)
 Documents the Python backend environment variables for local development, including port, allowed frontend origin, and the OPTCG API base URL.
 
-### [backend1/app/main.py](C:/Users/natha/one-piece-binder/backend1/app/main.py)
+### [backend/app/main.py](C:/Users/natha/one-piece-binder/backend/app/main.py)
 Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, sets, cards, search, and market price lookups.
 
-### [backend1/app/config.py](C:/Users/natha/one-piece-binder/backend1/app/config.py)
+### [backend/app/config.py](C:/Users/natha/one-piece-binder/backend/app/config.py)
 Loads normalized runtime configuration for the Python backend from environment variables.
 
-### [backend1/app/models.py](C:/Users/natha/one-piece-binder/backend1/app/models.py)
+### [backend/app/models.py](C:/Users/natha/one-piece-binder/backend/app/models.py)
 Defines the Pydantic validation models for upstream OPTCG API payloads and the normalized response models returned to the frontend.
 
-### [backend1/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend1/app/optcg_client.py)
+### [backend/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend/app/optcg_client.py)
 Handles all live OPTCG API calls, caches results with TTLs, and normalizes raw set and card data into the frontend-facing contract without using hardcoded catalog fixtures.
 
-### [backend1/app/cache.py](C:/Users/natha/one-piece-binder/backend1/app/cache.py)
+### [backend/app/cache.py](C:/Users/natha/one-piece-binder/backend/app/cache.py)
 Implements the Python backend's lightweight in-memory TTL cache used to reduce repeated upstream API calls.
