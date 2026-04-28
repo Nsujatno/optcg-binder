@@ -13,6 +13,7 @@ import {
   createId,
   createLayout,
   createPage,
+  getPlacementIdsForLayouts,
   getSlotsCovered,
   getTemplate,
   loadPersistedState,
@@ -27,6 +28,7 @@ import {
 export function useLayoutManager(cards: CardRecord[]) {
   const [layouts, setLayouts] = useState<BinderLayout[]>([]);
   const [activeLayoutId, setActiveLayoutId] = useState<string>("");
+  const [persistedCardSnapshots, setPersistedCardSnapshots] = useState<CardRecord[]>([]);
   const [activePageIndex, setActivePageIndex] = useState(0);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>("0-0");
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
@@ -39,17 +41,42 @@ export function useLayoutManager(cards: CardRecord[]) {
     const persisted = loadPersistedState();
     setLayouts(persisted.layouts);
     setActiveLayoutId(persisted.activeLayoutId);
+    setPersistedCardSnapshots(persisted.cardSnapshots ?? []);
     hasHydrated.current = true;
   }, []);
+
+  const resolvedCardPool = useMemo(() => {
+    const cardsById = new Map(persistedCardSnapshots.map((card) => [card.id, card]));
+    cards.forEach((card) => {
+      cardsById.set(card.id, card);
+    });
+    return Array.from(cardsById.values());
+  }, [cards, persistedCardSnapshots]);
+
+  const placementIdsForLayouts = useMemo(
+    () => getPlacementIdsForLayouts(layouts),
+    [layouts],
+  );
+  const placementCardSnapshots = useMemo(
+    () =>
+      resolvedCardPool.filter((card) =>
+        placementIdsForLayouts.some((placementId) => matchesCardPlacementId(card, placementId)),
+      ),
+    [placementIdsForLayouts, resolvedCardPool],
+  );
 
   useEffect(() => {
     if (!hasHydrated.current || !layouts.length || !activeLayoutId) {
       return;
     }
 
-    const state: PersistedState = { layouts, activeLayoutId };
+    const state: PersistedState = {
+      layouts,
+      activeLayoutId,
+      cardSnapshots: placementCardSnapshots,
+    };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [activeLayoutId, layouts]);
+  }, [activeLayoutId, layouts, placementCardSnapshots]);
 
   useEffect(() => {
     setTemplateErrorMessage("");
@@ -66,13 +93,13 @@ export function useLayoutManager(cards: CardRecord[]) {
   const activePage = activeLayout?.pages[activePageIndex] ?? null;
   const selectedCard = useMemo(
     () =>
-      cards.find((card) =>
+      resolvedCardPool.find((card) =>
         matchesCardPlacementId(
           card,
           selectedSlotId ? activePage?.placements[selectedSlotId] : undefined,
         ),
       ) ?? null,
-    [activePage?.placements, cards, selectedSlotId],
+    [activePage?.placements, resolvedCardPool, selectedSlotId],
   );
   const selectedRegion = useMemo(
     () => activePage?.artRegions.find((region) => region.id === selectedRegionId) ?? null,
@@ -317,7 +344,13 @@ export function useLayoutManager(cards: CardRecord[]) {
 
   function exportLayouts() {
     const blob = new Blob(
-      [JSON.stringify({ layouts, activeLayoutId }, null, 2)],
+      [
+        JSON.stringify(
+          { layouts, activeLayoutId, cardSnapshots: placementCardSnapshots },
+          null,
+          2,
+        ),
+      ],
       { type: "application/json" },
     );
     const url = window.URL.createObjectURL(blob);
@@ -341,6 +374,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     }
     setLayouts(parsed.layouts);
     setActiveLayoutId(parsed.activeLayoutId ?? parsed.layouts[0].id);
+    setPersistedCardSnapshots(parsed.cardSnapshots ?? []);
     setActivePageIndex(0);
     setSelectedSlotId("0-0");
     setSelectedRegionId(null);
@@ -428,6 +462,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     occupiedByArt,
     currentSlotPosition,
     activeLayoutAssets,
+    resolvedCardPool,
     activePagePlacedCardIds,
     activePagePlacedCardCount,
     availableSlotIds,

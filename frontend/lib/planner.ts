@@ -35,6 +35,7 @@ export const SLOT_ACCENTS = ["#1f2937", "#7c3aed", "#2563eb", "#b45309", "#dc262
 export type PersistedState = {
   layouts: BinderLayout[];
   activeLayoutId: string;
+  cardSnapshots?: CardRecord[];
 };
 
 export type CropDraft = {
@@ -194,20 +195,20 @@ function compareSlotIds(leftSlotId: string, rightSlotId: string) {
 export function loadPersistedState(): PersistedState {
   if (typeof window === "undefined") {
     const layout = createLayout();
-    return { layouts: [layout], activeLayoutId: layout.id };
+    return { layouts: [layout], activeLayoutId: layout.id, cardSnapshots: [] };
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const layout = createLayout();
-      return { layouts: [layout], activeLayoutId: layout.id };
+      return { layouts: [layout], activeLayoutId: layout.id, cardSnapshots: [] };
     }
 
     const parsed = JSON.parse(raw) as PersistedState;
     if (!parsed.layouts?.length || !parsed.activeLayoutId) {
       const layout = createLayout();
-      return { layouts: [layout], activeLayoutId: layout.id };
+      return { layouts: [layout], activeLayoutId: layout.id, cardSnapshots: [] };
     }
 
     return {
@@ -219,11 +220,22 @@ export function loadPersistedState(): PersistedState {
           emptySlotStyle: "glass",
         },
       })),
+      cardSnapshots: parsed.cardSnapshots ?? [],
     };
   } catch {
     const layout = createLayout();
-    return { layouts: [layout], activeLayoutId: layout.id };
+    return { layouts: [layout], activeLayoutId: layout.id, cardSnapshots: [] };
   }
+}
+
+export function getPlacementIdsForLayouts(layouts: BinderLayout[]) {
+  return Array.from(
+    new Set(
+      layouts.flatMap((layout) =>
+        layout.pages.flatMap((page) => Object.values(page.placements)),
+      ),
+    ),
+  );
 }
 
 export function slotKey(row: number, col: number) {

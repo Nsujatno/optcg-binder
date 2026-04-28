@@ -52,7 +52,7 @@ export function PlannerApp() {
             handleUploadImage={planner.handleUploadImage}
             deleteRegionById={planner.deleteRegionById}
             clearSelectedSlot={planner.clearSelectedSlot}
-            cards={planner.allLoadedCards}
+            cards={planner.resolvedCardPool}
             occupiedByArt={planner.occupiedByArt}
             selectedSlotId={planner.selectedSlotId}
             handleCardDrop={planner.handleCardDrop}
