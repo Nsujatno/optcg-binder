@@ -17,18 +17,18 @@ export const PAGE_GRID_GAP = 12;
 export const PAGE_PADDING = 16;
 
 export const BINDER_BACKGROUNDS = [
-  "#101726",
   "#111111",
-  "#334155",
-  "#6b4f3f",
-  "#14532d",
+  "#2f2f2f",
+  "#d1d5db",
+  "#ffffff",
+  "#f5efe2",
 ];
 export const PAGE_BACKGROUNDS = [
-  "#f7f1e3",
+  "#111111",
+  "#2f2f2f",
+  "#d1d5db",
   "#ffffff",
-  "#111827",
-  "#1f2937",
-  "#faf5ff",
+  "#f5efe2",
 ];
 export const SLOT_ACCENTS = ["#1f2937", "#7c3aed", "#2563eb", "#b45309", "#dc2626"];
 

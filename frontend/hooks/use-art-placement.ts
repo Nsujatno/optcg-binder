@@ -185,6 +185,17 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     layout.setSelectedRegionId(null);
   }
 
+  function deleteRegionById(regionId: string) {
+    layout.updateActivePage((page) => ({
+      ...page,
+      artRegions: page.artRegions.filter((region) => region.id !== regionId),
+    }));
+
+    if (layout.selectedRegionId === regionId) {
+      layout.setSelectedRegionId(null);
+    }
+  }
+
   return {
     cropDraft,
     setCropDraft,
@@ -194,6 +205,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     editSelectedRegion,
     toggleRegionLock,
     deleteSelectedRegion,
+    deleteRegionById,
   };
 }
 

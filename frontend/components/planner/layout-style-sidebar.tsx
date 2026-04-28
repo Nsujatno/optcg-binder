@@ -225,16 +225,16 @@ export function LayoutStyleSidebar({
                   </button>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm transition hover:border-white/20 hover:bg-white/10"
+                    className="flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm transition hover:border-white/20 hover:bg-white/10"
                     onClick={openRenameModal}
                     type="button"
                   >
                     Rename
                   </button>
                   <button
-                    className="rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:bg-rose-500/20"
+                    className="flex items-center justify-center rounded-full border border-rose-400/40 bg-rose-500/10 px-4 py-2 text-sm text-rose-200 transition hover:bg-rose-500/20"
                     onClick={() => setIsDeleteModalOpen(true)}
                     type="button"
                   >

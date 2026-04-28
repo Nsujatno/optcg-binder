@@ -48,6 +48,10 @@ export function PlannerApp() {
             setSelectedRegionId={planner.setSelectedRegionId}
             setSelectedSlotId={planner.setSelectedSlotId}
             setActivePageIndex={planner.setActivePageIndex}
+            uploadInputRef={planner.uploadInputRef}
+            handleUploadImage={planner.handleUploadImage}
+            deleteRegionById={planner.deleteRegionById}
+            clearSelectedSlot={planner.clearSelectedSlot}
             cards={planner.allLoadedCards}
             occupiedByArt={planner.occupiedByArt}
             selectedSlotId={planner.selectedSlotId}
@@ -78,17 +82,11 @@ export function PlannerApp() {
               updateTheme={planner.updateTheme}
             />
 
-            <InspectorSidebar
-              currentSlotPosition={planner.currentSlotPosition}
-              selectedCard={planner.selectedCard}
-              clearSelectedSlot={planner.clearSelectedSlot}
-              uploadInputRef={planner.uploadInputRef}
-              handleUploadImage={planner.handleUploadImage}
-              selectedRegion={planner.selectedRegion}
-              editSelectedRegion={planner.editSelectedRegion}
-              toggleRegionLock={planner.toggleRegionLock}
-              deleteSelectedRegion={planner.deleteSelectedRegion}
-            />
+            {planner.selectedCard ? (
+              <InspectorSidebar
+                selectedCard={planner.selectedCard}
+              />
+            ) : null}
           </div>
         </div>
       </div>

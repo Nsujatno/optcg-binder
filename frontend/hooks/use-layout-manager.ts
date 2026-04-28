@@ -28,7 +28,7 @@ export function useLayoutManager(cards: CardRecord[]) {
   const [layouts, setLayouts] = useState<BinderLayout[]>([]);
   const [activeLayoutId, setActiveLayoutId] = useState<string>("");
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [selectedSlotId, setSelectedSlotId] = useState("0-0");
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>("0-0");
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [templateErrorMessage, setTemplateErrorMessage] = useState("");
@@ -67,7 +67,10 @@ export function useLayoutManager(cards: CardRecord[]) {
   const selectedCard = useMemo(
     () =>
       cards.find((card) =>
-        matchesCardPlacementId(card, activePage?.placements[selectedSlotId]),
+        matchesCardPlacementId(
+          card,
+          selectedSlotId ? activePage?.placements[selectedSlotId] : undefined,
+        ),
       ) ?? null,
     [activePage?.placements, cards, selectedSlotId],
   );
@@ -83,6 +86,13 @@ export function useLayoutManager(cards: CardRecord[]) {
     return slots;
   }, [activePage?.artRegions]);
   const currentSlotPosition = useMemo(() => {
+    if (!selectedSlotId) {
+      return {
+        row: 0,
+        col: 0,
+      };
+    }
+
     const [row = "0", col = "0"] = selectedSlotId.split("-");
     return {
       row: Number.parseInt(row, 10),
@@ -250,7 +260,7 @@ export function useLayoutManager(cards: CardRecord[]) {
   }
 
   function clearSelectedSlot() {
-    if (!activePage) {
+    if (!activePage || !selectedSlotId) {
       return;
     }
 
