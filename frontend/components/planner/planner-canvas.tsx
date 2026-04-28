@@ -302,7 +302,11 @@ export function PlannerCanvas({
                     <button
                       aria-label="Upload Meechi art"
                       className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
-                      onClick={() => uploadInputRef.current?.click()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setSelectedSlotId(key);
+                        uploadInputRef.current?.click();
+                      }}
                       type="button"
                     >
                       <svg
