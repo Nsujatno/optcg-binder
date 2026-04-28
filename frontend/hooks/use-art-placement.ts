@@ -1,53 +1,14 @@
 "use client";
 
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import type { LayoutManager } from "@/hooks/use-layout-manager";
-import { CropDraft, createId, fileToAsset, regionContainsSlot, slotKey } from "@/lib/planner";
+import { canPlaceArtRegion } from "@/lib/art-region-placement";
+import { CropDraft, createId, fileToAsset } from "@/lib/planner";
 import type { ArtRegion } from "@/lib/types";
 
 export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: string) => void) {
   const [cropDraft, setCropDraft] = useState<CropDraft | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
-
-  function canPlaceArtRegion(
-    originRow: number,
-    originCol: number,
-    rowSpan: number,
-    colSpan: number,
-    ignoreRegionId?: string,
-  ) {
-    const page = layout.activePage;
-    if (!page) {
-      return false;
-    }
-
-    if (
-      originRow + rowSpan > layout.activeTemplate.rows ||
-      originCol + colSpan > layout.activeTemplate.cols
-    ) {
-      return false;
-    }
-
-    for (let row = originRow; row < originRow + rowSpan; row += 1) {
-      for (let col = originCol; col < originCol + colSpan; col += 1) {
-        const key = slotKey(row, col);
-        if (page.placements[key]) {
-          return false;
-        }
-
-        const overlappingRegion = page.artRegions.find(
-          (region) =>
-            region.id !== ignoreRegionId && regionContainsSlot(region, row, col),
-        );
-
-        if (overlappingRegion) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  }
 
   async function handleUploadImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -79,13 +40,15 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     }
 
     if (
-      !canPlaceArtRegion(
-        layout.currentSlotPosition.row,
-        layout.currentSlotPosition.col,
-        cropDraft.rowSpan,
-        cropDraft.colSpan,
-        cropDraft.editingRegionId,
-      )
+      !canPlaceArtRegion({
+        page: layout.activePage,
+        template: layout.activeTemplate,
+        originRow: layout.currentSlotPosition.row,
+        originCol: layout.currentSlotPosition.col,
+        rowSpan: cropDraft.rowSpan,
+        colSpan: cropDraft.colSpan,
+        ignoreRegionId: cropDraft.editingRegionId,
+      })
     ) {
       setErrorMessage("That image span overlaps cards, art, or exceeds the page.");
       return;
@@ -131,6 +94,59 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
 
     layout.setSelectedRegionId(nextRegion.id);
     setCropDraft(null);
+    setErrorMessage("");
+  }
+
+  function handleArtRegionDrop(event: DragEvent<HTMLButtonElement>, targetSlotId: string) {
+    event.preventDefault();
+
+    if (!layout.activePage) {
+      return;
+    }
+
+    const regionId = event.dataTransfer.getData("application/x-art-region-id");
+    if (!regionId) {
+      return;
+    }
+
+    const region = layout.activePage.artRegions.find((item) => item.id === regionId);
+    if (!region) {
+      return;
+    }
+
+    const [row = "0", col = "0"] = targetSlotId.split("-");
+    const nextOriginRow = Number.parseInt(row, 10);
+    const nextOriginCol = Number.parseInt(col, 10);
+
+    if (
+      !canPlaceArtRegion({
+        page: layout.activePage,
+        template: layout.activeTemplate,
+        originRow: nextOriginRow,
+        originCol: nextOriginCol,
+        rowSpan: region.rowSpan,
+        colSpan: region.colSpan,
+        ignoreRegionId: region.id,
+      })
+    ) {
+      setErrorMessage("That image span overlaps cards, art, or exceeds the page.");
+      return;
+    }
+
+    layout.updateActivePage((page) => ({
+      ...page,
+      artRegions: page.artRegions.map((item) =>
+        item.id === region.id
+          ? {
+              ...item,
+              originRow: nextOriginRow,
+              originCol: nextOriginCol,
+            }
+          : item,
+      ),
+    }));
+    layout.setSelectedRegionId(region.id);
+    layout.setSelectedSlotId(targetSlotId);
     setErrorMessage("");
   }
 
@@ -202,6 +218,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     uploadInputRef,
     handleUploadImage,
     confirmCropPlacement,
+    handleArtRegionDrop,
     editSelectedRegion,
     toggleRegionLock,
     deleteSelectedRegion,
