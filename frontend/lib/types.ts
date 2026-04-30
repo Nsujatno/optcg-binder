@@ -114,7 +114,7 @@ export const BINDER_TEMPLATES: BinderTemplate[] = [
 
 export const DEFAULT_THEME: ThemeConfig = {
   binderBackground: "#101726",
-  pageBackground: "#f7f1e3",
+  pageBackground: "#2f2f2f",
   slotAccent: "#1f2937",
   emptySlotStyle: "glass",
 };
