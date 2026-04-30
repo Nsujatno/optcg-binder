@@ -457,9 +457,7 @@ export function useLayoutManager(
 
   function upsertCardSnapshot(card: CardRecord) {
     setPersistedCardSnapshots((current) => {
-      const index = current.findIndex(
-        (item) => item.id === card.id || item.cardSetId === card.cardSetId,
-      );
+      const index = current.findIndex((item) => item.id === card.id);
       if (index === -1) {
         return [...current, card];
       }
