@@ -20,6 +20,7 @@ type UseSlotRecommendationsArgs = {
   selectedCard: CardRecord | null;
   setErrorMessage: (message: string, variant?: ToastVariant) => void;
   placeCardInSlot: (slotId: string, cardId: string) => void;
+  upsertCardSnapshot: (card: CardRecord) => void;
 };
 
 function buildPlacementRecords(
@@ -63,6 +64,7 @@ export function useSlotRecommendations({
   selectedCard,
   setErrorMessage,
   placeCardInSlot,
+  upsertCardSnapshot,
 }: UseSlotRecommendationsArgs) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -129,6 +131,30 @@ export function useSlotRecommendations({
   function applyRecommendation(cardId: string) {
     if (!selectedSlotId) {
       return;
+    }
+
+    const selectedRecommendation = recommendations.find((item) => item.id === cardId);
+    if (selectedRecommendation) {
+      upsertCardSnapshot({
+        id: selectedRecommendation.id,
+        setId: selectedRecommendation.setId,
+        setName: selectedRecommendation.setName,
+        cardSetId: selectedRecommendation.cardSetId,
+        name: selectedRecommendation.name,
+        imageUrl: selectedRecommendation.imageUrl,
+        marketPrice: selectedRecommendation.marketPrice,
+        rarity: selectedRecommendation.rarity,
+        color: selectedRecommendation.color,
+        type: selectedRecommendation.type,
+        cost: null,
+        power: null,
+        life: null,
+        counter: null,
+        attribute: null,
+        subTypes: selectedRecommendation.subTypes,
+        text: "",
+        scrapedAt: null,
+      });
     }
 
     placeCardInSlot(selectedSlotId, cardId);

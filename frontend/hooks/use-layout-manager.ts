@@ -455,6 +455,21 @@ export function useLayoutManager(
     });
   }
 
+  function upsertCardSnapshot(card: CardRecord) {
+    setPersistedCardSnapshots((current) => {
+      const index = current.findIndex(
+        (item) => item.id === card.id || item.cardSetId === card.cardSetId,
+      );
+      if (index === -1) {
+        return [...current, card];
+      }
+
+      const next = [...current];
+      next[index] = card;
+      return next;
+    });
+  }
+
   return {
     layouts,
     activeLayoutId,
@@ -499,6 +514,7 @@ export function useLayoutManager(
     importLayouts,
     handleCardDrop,
     placeCardsInNextEmptySlots,
+    upsertCardSnapshot,
   };
 }
 

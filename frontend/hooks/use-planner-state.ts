@@ -18,6 +18,7 @@ export function usePlannerState(onError?: (message: string, variant?: ToastVaria
     selectedCard: layout.selectedCard,
     setErrorMessage: catalog.setErrorMessage,
     placeCardInSlot: layout.placeCardInSlot,
+    upsertCardSnapshot: layout.upsertCardSnapshot,
   });
 
   async function importLayouts(event: React.ChangeEvent<HTMLInputElement>) {
