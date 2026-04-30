@@ -77,6 +77,20 @@ Documents the current repository structure and the role of the main files. It ex
 ### [package.json](C:/Users/natha/one-piece-binder/package.json)
 Defines the workspace-level scripts and provides a single entry point for running the Next.js frontend and the active Python backend service in `backend`.
 
+## AI Indexing Project
+
+### [ai-indexer/README.md](C:/Users/natha/one-piece-binder/ai-indexer/README.md)
+Documents the separate offline indexing workflow for premium-card visual matching. It explains the required environment, the sync commands, and the local cache and manifest behavior.
+
+### [ai-indexer/sync.py](C:/Users/natha/one-piece-binder/ai-indexer/sync.py)
+This is the CLI entry point for offline premium-card indexing. It supports full syncs, targeted syncs by unique IDs or vector IDs, and full rebuild runs.
+
+### [ai-indexer/app/config.py](C:/Users/natha/one-piece-binder/ai-indexer/app/config.py)
+Loads normalized runtime configuration for the indexing project, including backend export URL, Upstash Vector credentials, Voyage credentials, and local cache paths.
+
+### [ai-indexer/app/indexer.py](C:/Users/natha/one-piece-binder/ai-indexer/app/indexer.py)
+Implements the offline indexing flow. It fetches the backend premium export, caches images locally, generates Voyage image embeddings, upserts vectors into Upstash Vector, and appends to the local manifest while supporting resume behavior.
+
 ## Deployment Notes
 
 ### Vercel (Serverless)
@@ -139,6 +153,9 @@ Manages binder layouts, pages, selected slots, persistence, theme updates, and d
 ### [frontend/hooks/use-art-placement.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-art-placement.ts)
 Encapsulates image upload, crop draft state, art region validation, and placement, edit, and delete logic. Its role is to isolate the Meechi-specific workflow from the broader layout manager.
 
+### [frontend/hooks/use-slot-recommendations.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-slot-recommendations.ts)
+Owns the `What matches here?` UI flow for empty slots on eligible pages. It builds the current page context, calls the backend recommendation endpoint, manages the open/close state of the recommendation panel, and applies a chosen suggestion into the selected slot.
+
 ## Shared Frontend Logic
 
 ### [frontend/lib/types.ts](C:/Users/natha/one-piece-binder/frontend/lib/types.ts)
@@ -151,27 +168,48 @@ Contains planner-specific constants and utility functions such as template looku
 Provides a local fallback sample catalog for development or API failure cases. It ensures the planner can still function when the external card source is unavailable.
 
 ### [frontend/lib/api-client.ts](C:/Users/natha/one-piece-binder/frontend/lib/api-client.ts)
-Provides typed frontend wrappers for calling the separate backend service. Its role is to keep raw endpoint strings and request mechanics out of the React hooks and UI components.
+Provides typed frontend wrappers for calling the separate backend service. Its role is to keep raw endpoint strings and request mechanics out of the React hooks and UI components, including the AI slot recommendation request.
 
 ## Backend Service
 
 ### [backend/requirements.txt](C:/Users/natha/one-piece-binder/backend/requirements.txt)
-Lists the Python packages required to run the active backend service: FastAPI, Uvicorn, and HTTPX.
+Lists the Python packages required to run the active backend service, including FastAPI, Uvicorn, HTTPX, and dotenv support for local environment loading.
 
 ### [backend/.env.example](C:/Users/natha/one-piece-binder/backend/.env.example)
-Documents the Python backend environment variables for local development, including port, allowed frontend origin, and the OPTCG API base URL.
+Documents the Python backend environment variables for local development, including the OPTCG source configuration, Upstash Redis and Vector credentials, premium-card filtering, and AI cache and rate-limit settings.
 
 ### [backend/app/main.py](C:/Users/natha/one-piece-binder/backend/app/main.py)
-Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, sets, cards, search, and market price lookups.
+Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, catalog lookups, premium export, and AI slot recommendations. It also wires the AI rate-limit store and response caching path.
 
 ### [backend/app/config.py](C:/Users/natha/one-piece-binder/backend/app/config.py)
-Loads normalized runtime configuration for the Python backend from environment variables.
+Loads normalized runtime configuration for the Python backend from environment variables and the local `backend/.env` file.
 
 ### [backend/app/models.py](C:/Users/natha/one-piece-binder/backend/app/models.py)
-Defines the Pydantic validation models for upstream OPTCG API payloads and the normalized response models returned to the frontend.
+Defines the Pydantic validation models for upstream OPTCG API payloads, the normalized catalog response models, and the AI recommendation and premium export request and response models.
 
 ### [backend/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend/app/optcg_client.py)
 Handles all live OPTCG API calls, caches results with TTLs, and normalizes raw set and card data into the frontend-facing contract without using hardcoded catalog fixtures.
 
 ### [backend/app/cache.py](C:/Users/natha/one-piece-binder/backend/app/cache.py)
 Implements the Python backend's lightweight in-memory TTL cache used to reduce repeated upstream API calls.
+
+### [backend/app/ai_support.py](C:/Users/natha/one-piece-binder/backend/app/ai_support.py)
+Provides shared AI helpers for recommendation-related infrastructure, including normalized text and vector ID utilities, request cache hashing, rate-limit subject resolution, and the Redis-backed state adapter with local fallback behavior.
+
+### [backend/app/slot_recommendations.py](C:/Users/natha/one-piece-binder/backend/app/slot_recommendations.py)
+Acts as the orchestration module for slot recommendations. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final response returned to the planner UI.
+
+### [backend/app/recommendation/premium_catalog.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/premium_catalog.py)
+Owns premium-card filtering, cached premium catalog construction, premium export shaping, and cache-key generation for recommendation requests.
+
+### [backend/app/recommendation/recommendation_profiles.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/recommendation_profiles.py)
+Defines the normalized premium-card profile used throughout the recommendation flow. It is the shared shape for catalog cards, page placements, vector IDs, and normalized name-family data.
+
+### [backend/app/recommendation/recommendation_spatial.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/recommendation_spatial.py)
+Handles spatial recommendation logic such as anchor selection, slot-distance weighting, and weighted vector composition around the target slot.
+
+### [backend/app/recommendation/recommendation_ranking.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/recommendation_ranking.py)
+Encapsulates metadata scoring, deterministic explanation text, and result diversification rules for recommendation candidates.
+
+### [backend/app/recommendation/vector_store.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/vector_store.py)
+Implements the Upstash Vector adapter used by the recommendation flow for vector fetches and nearest-neighbor queries.

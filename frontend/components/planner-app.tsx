@@ -115,12 +115,21 @@ export function PlannerApp() {
               updateTheme={planner.updateTheme}
             />
 
-            {planner.selectedCard || planner.selectedRegion ? (
+            {planner.selectedCard || planner.selectedRegion || planner.selectedSlotId ? (
               <InspectorSidebar
+                selectedSlotId={planner.selectedSlotId}
                 selectedCard={planner.selectedCard}
                 selectedRegion={planner.selectedRegion}
                 editSelectedRegion={planner.editSelectedRegion}
                 deleteSelectedRegion={planner.deleteSelectedRegion}
+                recommendationFeatureEligible={planner.recommendationFeatureEligible}
+                recommendationPanelOpen={planner.recommendationPanelOpen}
+                recommendationLoading={planner.recommendationLoading}
+                recommendationEmptyState={planner.recommendationEmptyState}
+                recommendations={planner.recommendations}
+                openRecommendations={planner.openRecommendations}
+                closeRecommendations={planner.closeRecommendations}
+                applyRecommendation={planner.applyRecommendation}
               />
             ) : null}
           </div>

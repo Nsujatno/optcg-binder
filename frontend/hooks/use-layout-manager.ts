@@ -332,6 +332,20 @@ export function useLayoutManager(cards: CardRecord[]) {
     setSelectedSlotId("0-0");
   }
 
+  function placeCardInSlot(targetSlotId: string, cardId: string) {
+    if (!activePage || occupiedByArt.has(targetSlotId)) {
+      return;
+    }
+
+    updateActivePage((page) => ({
+      ...page,
+      placements: {
+        ...page.placements,
+        [targetSlotId]: cardId,
+      },
+    }));
+  }
+
   function updateTheme<K extends keyof BinderLayout["theme"]>(
     key: K,
     value: BinderLayout["theme"][K],
@@ -482,6 +496,7 @@ export function useLayoutManager(cards: CardRecord[]) {
     addPage,
     duplicatePage,
     clearSelectedSlot,
+    placeCardInSlot,
     setTemplate,
     updateTheme,
     exportLayouts,
