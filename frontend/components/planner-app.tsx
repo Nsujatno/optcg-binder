@@ -9,18 +9,19 @@ import { LayoutStyleSidebar } from "@/components/planner/layout-style-sidebar";
 import { PlannerCanvas } from "@/components/planner/planner-canvas";
 import { PlannerHeader } from "@/components/planner/planner-header";
 import { SetCardsModal } from "@/components/planner/set-cards-modal";
+import { ToastStack } from "@/components/planner/toast-stack";
 import { usePlannerState } from "@/hooks/use-planner-state";
+import { useToast } from "@/hooks/use-toast";
 import { downloadBinderImages, type DownloadScope } from "@/lib/binder-export";
 
 export function PlannerApp() {
-  const planner = usePlannerState();
+  const { toasts, showToast, dismissToast } = useToast();
+  const planner = usePlannerState(showToast);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-  const [downloadErrorMessage, setDownloadErrorMessage] = useState("");
   const [downloading, setDownloading] = useState(false);
 
   async function handleDownload(scope: DownloadScope) {
     setDownloading(true);
-    setDownloadErrorMessage("");
 
     try {
       await downloadBinderImages({
@@ -32,7 +33,7 @@ export function PlannerApp() {
       });
       setDownloadModalOpen(false);
     } catch (error) {
-      setDownloadErrorMessage(
+      showToast(
         error instanceof Error ? error.message : "The binder image could not be downloaded.",
       );
     } finally {
@@ -50,18 +51,11 @@ export function PlannerApp() {
         importLayouts={planner.importLayouts}
         importInputRef={planner.importInputRef}
         openDownloadModal={() => {
-          setDownloadErrorMessage("");
           setDownloadModalOpen(true);
         }}
       />
 
       <div className="mx-auto flex max-w-[1700px] flex-col gap-4 px-4 py-4 lg:px-6">
-        {planner.errorMessage ? (
-          <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-            {planner.errorMessage}
-          </div>
-        ) : null}
-
         <div className="grid flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
           <CatalogSidebar
             sets={planner.sets}
@@ -111,7 +105,6 @@ export function PlannerApp() {
               duplicatePage={planner.duplicatePage}
               setSelectedRegionId={planner.setSelectedRegionId}
               templateValidationById={planner.templateValidationById}
-              templateErrorMessage={planner.templateErrorMessage}
               updateTheme={planner.updateTheme}
             />
 
@@ -149,7 +142,6 @@ export function PlannerApp() {
         closeSetModal={planner.closeSetModal}
         selectedSet={planner.selectedSet}
         cardLoading={planner.cardLoading}
-        modalError={planner.modalError}
         filteredCards={planner.filteredCards}
         modalSearch={planner.modalSearch}
         setModalSearch={planner.setModalSearch}
@@ -160,17 +152,16 @@ export function PlannerApp() {
 
       <DownloadModal
         downloading={downloading}
-        errorMessage={downloadErrorMessage}
         onClose={() => {
           if (downloading) {
             return;
           }
           setDownloadModalOpen(false);
-          setDownloadErrorMessage("");
         }}
         onDownload={handleDownload}
         open={downloadModalOpen}
       />
+      <ToastStack toasts={toasts} dismissToast={dismissToast} />
 
       <footer className="mx-auto w-full max-w-[1700px] px-4 pb-6 text-center text-xs text-slate-400 lg:px-6">
         Card art and One Piece-related assets belong to Eiichiro Oda, Bandai, Shonen Jump, and

@@ -5,7 +5,6 @@ import type { DownloadScope } from "@/lib/binder-export";
 type DownloadModalProps = {
   open: boolean;
   downloading: boolean;
-  errorMessage: string;
   onClose: () => void;
   onDownload: (scope: DownloadScope) => void;
 };
@@ -35,7 +34,6 @@ const downloadOptions: Array<{
 export function DownloadModal({
   open,
   downloading,
-  errorMessage,
   onClose,
   onDownload,
 }: DownloadModalProps) {
@@ -71,12 +69,6 @@ export function DownloadModal({
             </button>
           ))}
         </div>
-
-        {errorMessage ? (
-          <div className="mt-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
-            {errorMessage}
-          </div>
-        ) : null}
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <p className="text-xs text-slate-500">

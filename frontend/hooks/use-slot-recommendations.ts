@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { getSlotRecommendationsClient } from "@/lib/api-client";
+import type { ToastVariant } from "@/hooks/use-toast";
+import { ApiError, getSlotRecommendationsClient } from "@/lib/api-client";
 import type {
   BinderPage,
   BinderTemplate,
@@ -17,7 +18,7 @@ type UseSlotRecommendationsArgs = {
   resolvedCardPool: CardRecord[];
   selectedSlotId: string | null;
   selectedCard: CardRecord | null;
-  setErrorMessage: (message: string) => void;
+  setErrorMessage: (message: string, variant?: ToastVariant) => void;
   placeCardInSlot: (slotId: string, cardId: string) => void;
 };
 
@@ -107,12 +108,19 @@ export function useSlotRecommendations({
       setRecommendations(payload.recommendations);
       setEmptyState(payload.recommendations.length === 0);
       setErrorMessage("");
-    } catch {
+    } catch (error) {
       setRequestedSlotId(null);
       setPanelOpen(false);
       setRecommendations([]);
       setEmptyState(false);
-      setErrorMessage("Could not load matches right now.");
+      if (error instanceof ApiError && error.status === 429) {
+        setErrorMessage(
+          "You hit the recommendation rate limit. Please wait and try again.",
+          "warning",
+        );
+      } else {
+        setErrorMessage("Could not load matches right now.");
+      }
     } finally {
       setLoading(false);
     }

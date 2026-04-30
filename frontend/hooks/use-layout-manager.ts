@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
+import type { ToastVariant } from "@/hooks/use-toast";
 import type {
   ArtRegion,
   BinderLayout,
@@ -25,7 +26,10 @@ import {
   validatePageForTemplate,
 } from "@/lib/planner";
 
-export function useLayoutManager(cards: CardRecord[]) {
+export function useLayoutManager(
+  cards: CardRecord[],
+  onError?: (message: string, variant?: ToastVariant) => void,
+) {
   const [layouts, setLayouts] = useState<BinderLayout[]>([]);
   const [activeLayoutId, setActiveLayoutId] = useState<string>("");
   const [persistedCardSnapshots, setPersistedCardSnapshots] = useState<CardRecord[]>([]);
@@ -33,7 +37,6 @@ export function useLayoutManager(cards: CardRecord[]) {
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>("0-0");
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
-  const [templateErrorMessage, setTemplateErrorMessage] = useState("");
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const hasHydrated = useRef(false);
 
@@ -77,10 +80,6 @@ export function useLayoutManager(cards: CardRecord[]) {
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [activeLayoutId, layouts, placementCardSnapshots]);
-
-  useEffect(() => {
-    setTemplateErrorMessage("");
-  }, [activeLayoutId, activePageIndex]);
 
   const activeLayout = useMemo(
     () => layouts.find((layout) => layout.id === activeLayoutId) ?? null,
@@ -310,7 +309,7 @@ export function useLayoutManager(cards: CardRecord[]) {
 
     const validation = validatePageForTemplate(activePage, activeTemplate, template);
     if (!validation.canApply) {
-      setTemplateErrorMessage(
+      onError?.(
         validation.reason
           ? `Unable to use ${template.name}: ${validation.reason}`
           : `Unable to use ${template.name}.`,
@@ -318,7 +317,6 @@ export function useLayoutManager(cards: CardRecord[]) {
       return;
     }
 
-    setTemplateErrorMessage("");
     updateActiveLayout((layout) => ({
       ...layout,
       templateId,
@@ -395,7 +393,6 @@ export function useLayoutManager(cards: CardRecord[]) {
     setActivePageIndex(0);
     setSelectedSlotId("0-0");
     setSelectedRegionId(null);
-    setTemplateErrorMessage("");
   }
 
   function handleCardDrop(event: DragEvent<HTMLButtonElement>, targetSlotId: string) {
@@ -485,7 +482,6 @@ export function useLayoutManager(cards: CardRecord[]) {
     availableSlotIds,
     remainingPageCapacity,
     templateValidationById,
-    templateErrorMessage,
     updateLayouts,
     updateActiveLayout,
     updateActivePage,

@@ -10,7 +10,6 @@ type SetCardsModalProps = Pick<
   | "closeSetModal"
   | "selectedSet"
   | "cardLoading"
-  | "modalError"
   | "filteredCards"
   | "modalSearch"
   | "setModalSearch"
@@ -24,7 +23,6 @@ export function SetCardsModal({
   closeSetModal,
   selectedSet,
   cardLoading,
-  modalError,
   filteredCards,
   modalSearch,
   setModalSearch,
@@ -145,10 +143,6 @@ export function SetCardsModal({
           {cardLoading ? (
             <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center text-sm text-slate-300">
               Loading cards...
-            </div>
-          ) : modalError ? (
-            <div className="rounded-3xl border border-rose-400/30 bg-rose-500/10 px-6 py-12 text-center text-sm text-rose-100">
-              {modalError}
             </div>
           ) : remainingPageCapacity === 0 ? (
             <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center text-sm text-slate-300">

@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { ToastVariant } from "@/hooks/use-toast";
 import { getCardsBySetClient, getSetsClient } from "@/lib/api-client";
 import type { CardRecord, SetRecord } from "@/lib/types";
 
-export function useCatalogData() {
+export function useCatalogData(onError?: (message: string, variant?: ToastVariant) => void) {
   const [sets, setSets] = useState<SetRecord[]>([]);
   const [selectedSetId, setSelectedSetId] = useState<string>("");
   const [cardsBySetId, setCardsBySetId] = useState<Record<string, CardRecord[]>>({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSearch, setModalSearch] = useState("");
-  const [modalError, setModalError] = useState("");
   const [cardLoading, setCardLoading] = useState(false);
   const [setLoading, setSetLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const setErrorMessage = useCallback(
+    (message: string, variant: ToastVariant = "error") => {
+      if (!message.trim()) {
+        return;
+      }
+      onError?.(message, variant);
+    },
+    [onError],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +84,6 @@ export function useCatalogData() {
     setSelectedSetId(setId);
     setModalSearch("");
     setModalOpen(true);
-    setModalError("");
 
     if (cardsBySetId[setId]) {
       return;
@@ -90,7 +97,7 @@ export function useCatalogData() {
         [setId]: payload.cards,
       }));
     } catch {
-      setModalError("Could not load cards for that set right now.");
+      setErrorMessage("Could not load cards for that set right now.");
     } finally {
       setCardLoading(false);
     }
@@ -99,7 +106,6 @@ export function useCatalogData() {
   function closeSetModal() {
     setModalOpen(false);
     setModalSearch("");
-    setModalError("");
   }
 
   return {
@@ -114,10 +120,8 @@ export function useCatalogData() {
     allLoadedCards,
     modalSearch,
     setModalSearch,
-    modalError,
     cardLoading,
     setLoading,
-    errorMessage,
     setErrorMessage,
   };
 }
