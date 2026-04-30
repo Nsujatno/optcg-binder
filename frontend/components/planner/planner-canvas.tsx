@@ -142,7 +142,7 @@ export function PlannerCanvas({
           }}
         >
           <div
-            className="pointer-events-none absolute z-40 rounded-full border border-white/15 bg-slate-950/80 px-3 py-1 text-xs font-medium text-white shadow-[0_8px_24px_rgba(0,0,0,0.22)] backdrop-blur"
+            className="pointer-events-none absolute py-1.5 z-40 text-sm text-white"
             style={{
               top: "-32px",
               left: `${PAGE_PADDING}px`,
