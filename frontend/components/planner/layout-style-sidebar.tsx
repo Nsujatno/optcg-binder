@@ -26,7 +26,6 @@ type LayoutStyleSidebarProps = Pick<
   | "duplicatePage"
   | "setSelectedRegionId"
   | "templateValidationById"
-  | "templateErrorMessage"
   | "updateTheme"
 >;
 
@@ -49,7 +48,6 @@ export function LayoutStyleSidebar({
   duplicatePage,
   setSelectedRegionId,
   templateValidationById,
-  templateErrorMessage,
   updateTheme,
 }: LayoutStyleSidebarProps) {
   const [activeTab, setActiveTab] = useState<"layout" | "style">("layout");
@@ -275,9 +273,6 @@ export function LayoutStyleSidebar({
                   );
                 })}
               </div>
-              {templateErrorMessage ? (
-                <p className="mt-2 text-xs text-amber-200">{templateErrorMessage}</p>
-              ) : null}
               <p className="mt-2 text-xs text-slate-500">
                 Current grid: {activeTemplate.rows} rows x {activeTemplate.cols} cols
               </p>

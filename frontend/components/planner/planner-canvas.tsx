@@ -3,6 +3,7 @@ import { DEFAULT_THEME } from "@/lib/types";
 import {
   CARD_SLOT_HEIGHT,
   CARD_SLOT_WIDTH,
+  formatPrice,
   matchesCardPlacementId,
   PAGE_GRID_GAP,
   PAGE_PADDING,
@@ -78,6 +79,13 @@ export function PlannerCanvas({
     activeTemplate.rows * CARD_SLOT_HEIGHT +
     (activeTemplate.rows - 1) * PAGE_GRID_GAP +
     PAGE_PADDING * 2;
+  const activePageTotal = Object.values(activePage?.placements ?? {}).reduce(
+    (total, placedCardId) => {
+      const placedCard = cards.find((card) => matchesCardPlacementId(card, placedCardId));
+      return total + (placedCard?.marketPrice ?? 0);
+    },
+    0,
+  );
 
   return (
     <main className="rounded-[32px] border border-white/10 bg-slate-950/50 p-4 backdrop-blur">
@@ -127,21 +135,37 @@ export function PlannerCanvas({
         ) : null}
 
         <div
-          className="mx-auto grid rounded-[30px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
-          onClick={() => {
-            setSelectedSlotId(null);
-            setSelectedRegionId(null);
-          }}
+          className="relative mx-auto"
           style={{
-            backgroundColor: activeLayout?.theme.pageBackground ?? DEFAULT_THEME.pageBackground,
-            gridTemplateColumns: `repeat(${activeTemplate.cols}, ${CARD_SLOT_WIDTH}px)`,
-            gridTemplateRows: `repeat(${activeTemplate.rows}, ${CARD_SLOT_HEIGHT}px)`,
-            gap: `${PAGE_GRID_GAP}px`,
             width: `${pageWidth}px`,
             minWidth: `${pageWidth}px`,
-            height: `${pageHeight}px`,
           }}
         >
+          <div
+            className="pointer-events-none absolute py-1.5 z-40 text-sm text-white"
+            style={{
+              top: "-32px",
+              left: `${PAGE_PADDING}px`,
+            }}
+          >
+            Page total {formatPrice(activePageTotal)}
+          </div>
+          <div
+            className="relative grid rounded-[30px] border border-black/15 p-4 shadow-[0_30px_80px_rgba(0,0,0,0.35)]"
+            onClick={() => {
+              setSelectedSlotId(null);
+              setSelectedRegionId(null);
+            }}
+            style={{
+              backgroundColor: activeLayout?.theme.pageBackground ?? DEFAULT_THEME.pageBackground,
+              gridTemplateColumns: `repeat(${activeTemplate.cols}, ${CARD_SLOT_WIDTH}px)`,
+              gridTemplateRows: `repeat(${activeTemplate.rows}, ${CARD_SLOT_HEIGHT}px)`,
+              gap: `${PAGE_GRID_GAP}px`,
+              width: `${pageWidth}px`,
+              minWidth: `${pageWidth}px`,
+              height: `${pageHeight}px`,
+            }}
+          >
           {activePage?.artRegions.map((region) => {
             const asset = activeLayoutAssets.find((item) => item.id === region.assetId);
             if (!asset) {
@@ -368,6 +392,7 @@ export function PlannerCanvas({
               );
             }),
           )}
+          </div>
         </div>
       </div>
     </main>

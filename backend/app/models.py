@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 ScalarValue: TypeAlias = str | int | float
@@ -76,3 +76,68 @@ class CardsResponse(BaseModel):
 class MarketPriceResponse(BaseModel):
     cardId: str
     marketPrice: float | None
+
+
+class RecommendationPlacement(BaseModel):
+    slotId: str
+    id: str
+    setId: str
+    setName: str
+    cardSetId: str
+    name: str
+    imageUrl: str
+    marketPrice: float | None
+    rarity: str
+    color: str
+    type: str
+    subTypes: list[str]
+
+
+class SlotRecommendationRequest(BaseModel):
+    selectedSlotId: str
+    templateId: str
+    placements: list[RecommendationPlacement] = Field(max_length=15)
+
+
+class SlotRecommendation(BaseModel):
+    id: str
+    setId: str
+    setName: str
+    cardSetId: str
+    name: str
+    imageUrl: str
+    marketPrice: float | None
+    rarity: str
+    color: str
+    type: str
+    subTypes: list[str]
+    reason: str
+
+
+class SlotRecommendationsResponse(BaseModel):
+    recommendations: list[SlotRecommendation]
+    cached: bool = False
+
+
+class PremiumCardExportRecord(BaseModel):
+    id: str
+    vectorId: str
+    setId: str
+    setName: str
+    cardSetId: str
+    name: str
+    imageUrl: str
+    marketPrice: float | None
+    rarity: str
+    color: str
+    type: str
+    subTypes: list[str]
+    normalizedName: str
+    normalizedNameFamily: str
+
+
+class PremiumCardExportResponse(BaseModel):
+    version: str
+    namespace: str
+    embeddingModel: str
+    cards: list[PremiumCardExportRecord]

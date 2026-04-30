@@ -32,6 +32,25 @@ export type SetRecord = {
   cardCount: number;
 };
 
+export type RecommendationPlacementRecord = {
+  slotId: string;
+  id: string;
+  setId: string;
+  setName: string;
+  cardSetId: string;
+  name: string;
+  imageUrl: string;
+  marketPrice: number | null;
+  rarity: string;
+  color: string;
+  type: string;
+  subTypes: string[];
+};
+
+export type SlotRecommendationRecord = Omit<CardRecord, "cost" | "power" | "life" | "counter" | "attribute" | "text" | "scrapedAt"> & {
+  reason: string;
+};
+
 export type ThemeConfig = {
   binderBackground: string;
   pageBackground: string;
