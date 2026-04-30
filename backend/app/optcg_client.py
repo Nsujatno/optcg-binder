@@ -13,37 +13,62 @@ ONE_HOUR = 60 * 60
 FIFTEEN_MINUTES = 15 * 60
 ONE_DAY = 24 * 60 * 60
 
+SETS_CACHE_MAXSIZE = 8
+SET_CARDS_CACHE_MAXSIZE = 64
+SEARCH_CACHE_MAXSIZE = 256
+MARKET_CACHE_MAXSIZE = 1024
+ALL_SET_CARDS_CACHE_MAXSIZE = 8
+
 
 class OptcgClient:
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url.rstrip("/")
-        self.cache = TTLCache()
+        self.sets_cache: TTLCache[list[SetRecord]] = TTLCache(
+            maxsize=SETS_CACHE_MAXSIZE,
+            ttl_seconds=ONE_HOUR,
+        )
+        self.set_cards_cache: TTLCache[list[CardRecord]] = TTLCache(
+            maxsize=SET_CARDS_CACHE_MAXSIZE,
+            ttl_seconds=ONE_HOUR,
+        )
+        self.search_cache: TTLCache[list[CardRecord]] = TTLCache(
+            maxsize=SEARCH_CACHE_MAXSIZE,
+            ttl_seconds=FIFTEEN_MINUTES,
+        )
+        self.market_cache: TTLCache[float | None] = TTLCache(
+            maxsize=MARKET_CACHE_MAXSIZE,
+            ttl_seconds=ONE_DAY,
+        )
+        self.all_set_cards_cache: TTLCache[list[CardRecord]] = TTLCache(
+            maxsize=ALL_SET_CARDS_CACHE_MAXSIZE,
+            ttl_seconds=ONE_HOUR,
+        )
 
     async def fetch_sets(self) -> list[SetRecord]:
-        cached = self.cache.get("sets")
+        cached = self.sets_cache.get("sets")
         if cached is not None:
             return cached
 
         payload = await self._fetch_json("/allSets/")
         sets = [self._normalize_set(item) for item in payload]
         sets.sort(key=lambda item: item.code)
-        return self.cache.set("sets", sets, ONE_HOUR)
+        return self.sets_cache.set("sets", sets)
 
     async def fetch_cards_by_set(self, set_id: str) -> list[CardRecord]:
         cache_key = f"set:{set_id}:cards"
-        cached = self.cache.get(cache_key)
+        cached = self.set_cards_cache.get(cache_key)
         if cached is not None:
             return cached
 
         payload = await self._fetch_json(f"/sets/{set_id}/")
         cards = [self._normalize_card(item) for item in payload]
         cards.sort(key=lambda item: item.cardSetId)
-        return self.cache.set(cache_key, cards, ONE_HOUR)
+        return self.set_cards_cache.set(cache_key, cards)
 
     async def search_cards(self, query: str, set_id: str | None) -> list[CardRecord]:
         normalized_query = query.strip().lower()
         cache_key = f"search:{set_id or 'all'}:{normalized_query}"
-        cached = self.cache.get(cache_key)
+        cached = self.search_cache.get(cache_key)
         if cached is not None:
             return cached
 
@@ -72,11 +97,11 @@ class OptcgClient:
                 ).lower()
             ][:100]
 
-        return self.cache.set(cache_key, results, FIFTEEN_MINUTES)
+        return self.search_cache.set(cache_key, results)
 
     async def fetch_market_price(self, card_id: str) -> float | None:
         cache_key = f"market:{card_id}"
-        cached = self.cache.get(cache_key)
+        cached = self.market_cache.get(cache_key)
         if cached is not None:
             return cached
 
@@ -85,16 +110,16 @@ class OptcgClient:
             return None
 
         market_price = ExternalCard.model_validate(payload[0]).market_price
-        return self.cache.set(cache_key, market_price, ONE_DAY)
+        return self.market_cache.set(cache_key, market_price)
 
     async def fetch_all_set_cards(self) -> list[CardRecord]:
-        cached = self.cache.get("all-set-cards")
+        cached = self.all_set_cards_cache.get("all-set-cards")
         if cached is not None:
             return cached
 
         payload = await self._fetch_json("/allSetCards/")
         cards = [self._normalize_card(item) for item in payload]
-        return self.cache.set("all-set-cards", cards, ONE_HOUR)
+        return self.all_set_cards_cache.set("all-set-cards", cards)
 
     async def _fetch_json(self, path: str, params: dict[str, str] | None = None) -> object:
         url = f"{self.base_url}{path}"
