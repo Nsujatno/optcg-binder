@@ -92,15 +92,29 @@ export function InspectorSidebar({
               <h4 className="font-semibold">Empty slot</h4>
               <p className="mt-1 text-xs text-slate-400">Selected slot: {selectedSlotId}</p>
             </div>
-            {recommendationPanelOpen ? (
-              <button
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300"
-                onClick={closeRecommendations}
-                type="button"
-              >
-                Close
-              </button>
-            ) : null}
+            <div className="flex items-start gap-2">
+              <div className="group relative">
+                <span
+                  aria-label="AI matching info"
+                  className="inline-flex h-6 w-6 cursor-help items-center justify-center rounded-full border border-white/20 bg-white/5 text-xs font-semibold text-slate-300"
+                  role="img"
+                >
+                  ?
+                </span>
+                <div className="pointer-events-none absolute right-0 top-7 z-10 w-56 rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-xs text-slate-200 opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                  We use AI-powered features to determine what cards matche best on your page.
+                </div>
+              </div>
+              {recommendationPanelOpen ? (
+                <button
+                  className="rounded-full border border-white/10 px-3 py-1 text-xs text-slate-300"
+                  onClick={closeRecommendations}
+                  type="button"
+                >
+                  Close
+                </button>
+              ) : null}
+            </div>
           </div>
 
           {recommendationFeatureEligible ? (
