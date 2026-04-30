@@ -5,7 +5,7 @@ import traceback
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
@@ -29,6 +29,10 @@ if not redis_state.enabled:
         "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be configured before starting the backend."
     )
 recommendation_service = SlotRecommendationService(settings)
+allowed_card_image_hosts = {
+    "www.optcgapi.com",
+    "optcgapi.com",
+}
 
 print(
     "AI rate limit store:",
