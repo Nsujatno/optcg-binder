@@ -64,7 +64,10 @@ class RateLimitDecision:
 class RedisBackedState:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._local_cache = TTLCache()
+        self._local_cache: TTLCache[object] = TTLCache(
+            maxsize=2048,
+            ttl_seconds=60 * 60,
+        )
 
     @property
     def enabled(self) -> bool:
@@ -82,7 +85,7 @@ class RedisBackedState:
 
     async def set_json(self, key: str, value: dict[str, Any], ttl_seconds: int) -> None:
         if not self.enabled:
-            self._local_cache.set(key, value, ttl_seconds)
+            self._local_cache.set(key, value)
             return
 
         await self._post_pipeline([["SETEX", key, ttl_seconds, json.dumps(value)]])
@@ -118,9 +121,10 @@ class RedisBackedState:
         return RateLimitDecision(allowed=allowed, minute_count=minute_count, hour_count=hour_count)
 
     def _increment_local(self, key: str, ttl_seconds: int) -> int:
+        del ttl_seconds
         current = self._local_cache.get(key) or 0
         next_value = int(current) + 1
-        self._local_cache.set(key, next_value, ttl_seconds)
+        self._local_cache.set(key, next_value)
         return next_value
 
     @staticmethod

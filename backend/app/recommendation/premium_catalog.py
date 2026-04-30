@@ -10,7 +10,10 @@ from .recommendation_profiles import PremiumCardProfile
 class PremiumCatalog:
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._cache = TTLCache()
+        self._cache: TTLCache[list[PremiumCardProfile]] = TTLCache(
+            maxsize=8,
+            ttl_seconds=self._settings.premium_catalog_ttl_seconds,
+        )
 
     async def get_premium_catalog(self, all_cards: list[CardRecord]) -> list[PremiumCardProfile]:
         cache_key = f"premium-catalog:{len(all_cards)}:{stable_json_hash([card.id for card in all_cards[:500]])}"
@@ -25,7 +28,7 @@ class PremiumCatalog:
             if any(label in card.rarity.lower() for label in allowlist)
         ]
         premium_cards.sort(key=lambda card: (card.card_set_id, card.id))
-        return self._cache.set(cache_key, premium_cards, self._settings.premium_catalog_ttl_seconds)
+        return self._cache.set(cache_key, premium_cards)
 
     def build_export_records(self, cards: list[PremiumCardProfile]) -> list[PremiumCardExportRecord]:
         return [
