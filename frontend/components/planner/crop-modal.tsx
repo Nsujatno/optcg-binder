@@ -98,7 +98,7 @@ export function CropModal({
 
         <div className="space-y-4 rounded-[28px] border border-white/10 bg-white/5 p-4">
           <div>
-            <h3 className="text-lg font-semibold">Meechi crop</h3>
+            <h3 className="text-lg font-semibold">Michi crop</h3>
             <p className="mt-1 text-sm text-slate-400">
               Set the span, crop, and fit mode before placing the art.
             </p>

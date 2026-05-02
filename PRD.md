@@ -2,7 +2,7 @@
 
 ## Summary
 
-Build a desktop-first Next.js web app for One Piece TCG collectors to design binder layouts interactively. The core value is a flexible binder editor with drag-and-drop card placement, customizable binder and page styling, and first-class Meechi-style multi-slot image inserts.
+Build a desktop-first Next.js web app for One Piece TCG collectors to design binder layouts interactively. The core value is a flexible binder editor with drag-and-drop card placement, customizable binder and page styling, and first-class Michi-style multi-slot image inserts.
 
 The first release prioritizes:
 
@@ -25,7 +25,7 @@ The first release does not require:
 - Users can drag cards into binder slots and rearrange them.
 - Users can switch between multiple binder grid formats such as `1x1`, `2x2`, `3x3`, and `4x4`.
 - Users can customize binder/page visuals.
-- Users can upload custom art, assign a valid multi-slot span, crop it, and place it using the Meechi method.
+- Users can upload custom art, assign a valid multi-slot span, crop it, and place it using the Michi method.
 - Users can save layouts locally and continue later without creating an account.
 
 ## Core User Stories
@@ -66,7 +66,7 @@ The first release does not require:
 - Empty slot styling
 - Card fit mode support
 
-### Meechi Workflow
+### Michi Workflow
 
 - Upload local image
 - Choose valid slot span such as `1x2`, `2x1`, `2x2`, `3x2`, etc.
@@ -135,7 +135,7 @@ Future escalation path:
 ### Phase 3
 
 - Add theme customization
-- Add Meechi image upload/span/crop placement
+- Add Michi image upload/span/crop placement
 - Add region locking and editing
 
 ### Phase 4
