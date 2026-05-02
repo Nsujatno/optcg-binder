@@ -9,7 +9,7 @@ type PlannerCanvasSlotGridProps = Pick<
   | "activePage"
   | "uploadInputRef"
   | "clearSelectedSlot"
-  | "cards"
+  | "resolvedCardPool"
   | "occupiedByArt"
   | "selectedSlotId"
   | "setSelectedSlotId"
@@ -27,7 +27,7 @@ export function PlannerCanvasSlotGrid({
   activePage,
   uploadInputRef,
   clearSelectedSlot,
-  cards,
+  resolvedCardPool,
   occupiedByArt,
   selectedSlotId,
   setSelectedSlotId,
@@ -42,7 +42,7 @@ export function PlannerCanvasSlotGrid({
       const key = slotKey(row, col);
       const placedCardId = activePage?.placements[key];
       const placedCard =
-        cards.find((card) => matchesCardPlacementId(card, placedCardId)) ?? undefined;
+        resolvedCardPool.find((card) => matchesCardPlacementId(card, placedCardId)) ?? undefined;
       const artRegion = occupiedByArt.get(key);
       const isSelected = selectedSlotId === key;
       const canUploadArt = isSelected && !placedCard && !artRegion;

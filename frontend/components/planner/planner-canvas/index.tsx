@@ -27,7 +27,7 @@ type PlannerCanvasProps = Pick<
   | "handleUploadImage"
   | "deleteRegionById"
   | "clearSelectedSlot"
-  | "cards"
+  | "resolvedCardPool"
   | "occupiedByArt"
   | "selectedSlotId"
   | "handleCardDrop"
@@ -48,7 +48,7 @@ export function PlannerCanvas({
   handleUploadImage,
   deleteRegionById,
   clearSelectedSlot,
-  cards,
+  resolvedCardPool,
   occupiedByArt,
   selectedSlotId,
   handleCardDrop,
@@ -83,7 +83,7 @@ export function PlannerCanvas({
     PAGE_PADDING * 2;
   const activePageTotal = Object.values(activePage?.placements ?? {}).reduce(
     (total, placedCardId) => {
-      const placedCard = cards.find((card) => matchesCardPlacementId(card, placedCardId));
+      const placedCard = resolvedCardPool.find((card) => matchesCardPlacementId(card, placedCardId));
       return total + (placedCard?.marketPrice ?? 0);
     },
     0,
@@ -159,7 +159,7 @@ export function PlannerCanvas({
               activeLayout={activeLayout}
               activePage={activePage}
               activeTemplate={activeTemplate}
-              cards={cards}
+              resolvedCardPool={resolvedCardPool}
               clearSelectedSlot={clearSelectedSlot}
               handleArtRegionDrop={handleArtRegionDrop}
               handleCardDrop={handleCardDrop}

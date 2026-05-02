@@ -153,8 +153,14 @@ Provides the modal workflow for configuring uploaded artwork spans, crop offsets
 ### [frontend/hooks/use-planner-state.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-planner-state.ts)
 Composes the specialized planner hooks into a single interface consumed by the UI. Its role is coordination rather than owning detailed business logic itself.
 
-### [frontend/hooks/use-catalog-data.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-catalog-data.ts)
-Handles fetching sets and cards from the separate backend service, along with search state and loading and error state. It owns the planner's catalog data flow.
+### [frontend/hooks/catalog/index.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/index.ts)
+Acts as the catalog composition hook. It combines the catalog fetch module with the catalog modal module into the planner-facing catalog interface.
+
+### [frontend/hooks/catalog/fetch.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/fetch.ts)
+Defines the catalog fetch module. It owns set loading, per-source card caching, loading state, error reporting, and the backend fetch adapters for set cards and name-search results.
+
+### [frontend/hooks/catalog/modal.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/modal.ts)
+Defines the catalog modal module. It owns the active card source, modal visibility, modal-local search state, and the flow for opening either a set catalog or a card-name search result.
 
 ### [frontend/hooks/use-layout-manager.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-layout-manager.ts)
 Acts as the React seam for binder editing. It wires the planner editor modules to React state, persistence effects, and UI-facing actions for layouts, pages, slots, and drag-and-drop behavior.
