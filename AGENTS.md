@@ -179,10 +179,13 @@ Lists the Python packages required to run the active backend service, including 
 Documents the Python backend environment variables for local development, including the OPTCG source configuration, Upstash Redis and Vector credentials, premium-card filtering, and AI cache and rate-limit settings.
 
 ### [backend/app/main.py](C:/Users/natha/one-piece-binder/backend/app/main.py)
-Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, catalog lookups, premium export, and AI slot recommendations. It also wires the AI rate-limit store and response caching path.
+Defines the FastAPI application composition module. It creates the app, applies CORS, and mounts the domain route modules from `backend/app/routes`.
 
 ### [backend/app/config.py](C:/Users/natha/one-piece-binder/backend/app/config.py)
 Loads normalized runtime configuration for the Python backend from environment variables and the local `backend/.env` file.
+
+### [backend/app/dependencies.py](C:/Users/natha/one-piece-binder/backend/app/dependencies.py)
+Defines the shared backend adapter seam. It constructs and exposes the normalized runtime dependencies used by route modules, including settings, the OPTCG client, the Redis-backed state adapter, the slot recommendation module, and allowed card-image hosts.
 
 ### [backend/app/models.py](C:/Users/natha/one-piece-binder/backend/app/models.py)
 Defines the Pydantic validation models for upstream OPTCG API payloads, the normalized catalog response models, and the AI recommendation and premium export request and response models.
@@ -198,6 +201,18 @@ Provides shared AI helpers for recommendation-related infrastructure, including 
 
 ### [backend/app/slot_recommendations.py](C:/Users/natha/one-piece-binder/backend/app/slot_recommendations.py)
 Acts as the orchestration module for slot recommendations. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final response returned to the planner UI.
+
+### [backend/app/routes/health.py](C:/Users/natha/one-piece-binder/backend/app/routes/health.py)
+Defines the backend health route module. Its only role is to expose the lightweight liveness check.
+
+### [backend/app/routes/catalog.py](C:/Users/natha/one-piece-binder/backend/app/routes/catalog.py)
+Defines the catalog route module. It owns the HTTP handlers for set lookup, set card lookup, card search, filtered card lookup, and market price lookup.
+
+### [backend/app/routes/recommendations.py](C:/Users/natha/one-piece-binder/backend/app/routes/recommendations.py)
+Defines the AI slot recommendation route module. It owns the HTTP request handling seam for rate limiting, cache lookup and write-back, request guards, and delegation into the slot recommendation module.
+
+### [backend/app/routes/card_image.py](C:/Users/natha/one-piece-binder/backend/app/routes/card_image.py)
+Defines the card-image proxy route module. It validates allowed hosts and image responses before returning proxied remote card art to the frontend.
 
 ### [backend/app/recommendation/premium_catalog.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/premium_catalog.py)
 Owns premium-card filtering, cached premium catalog construction, premium export shaping, and cache-key generation for recommendation requests.
