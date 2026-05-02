@@ -78,6 +78,12 @@ export async function searchCardsClient(query: string, setId: string) {
   );
 }
 
+export async function getFilteredCardsClient(cardName: string) {
+  return requestJson<{ cards: CardRecord[] }>(
+    `/api/cards/filtered?card_name=${encodeURIComponent(cardName)}`,
+  );
+}
+
 export async function getSlotRecommendationsClient(input: {
   selectedSlotId: string;
   templateId: string;

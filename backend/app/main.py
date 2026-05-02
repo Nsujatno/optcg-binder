@@ -73,6 +73,11 @@ async def search_cards(
     return CardsResponse(cards=await client.search_cards(q, setId))
 
 
+@app.get("/api/cards/filtered", response_model=CardsResponse)
+async def get_filtered_cards(card_name: str = Query(default="")) -> CardsResponse:
+    return CardsResponse(cards=await client.fetch_cards_filtered_by_name(card_name))
+
+
 @app.get("/api/cards/{card_id}/market", response_model=MarketPriceResponse)
 async def get_market_price(card_id: str) -> MarketPriceResponse:
     return MarketPriceResponse(cardId=card_id, marketPrice=await client.fetch_market_price(card_id))

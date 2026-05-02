@@ -99,6 +99,24 @@ class OptcgClient:
 
         return self.search_cache.set(cache_key, results)
 
+    async def fetch_cards_filtered_by_name(self, card_name: str) -> list[CardRecord]:
+        normalized_query = card_name.strip().lower()
+        if not normalized_query:
+            return []
+
+        cache_key = f"filtered-name:{normalized_query}"
+        cached = self.search_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        payload = await self._fetch_json(
+            "/sets/filtered/",
+            params={"card_name": card_name.strip()},
+        )
+        cards = [self._normalize_card(item) for item in payload]
+        cards.sort(key=lambda item: item.cardSetId)
+        return self.search_cache.set(cache_key, cards)
+
     async def fetch_market_price(self, card_id: str) -> float | None:
         cache_key = f"market:{card_id}"
         cached = self.market_cache.get(cache_key)

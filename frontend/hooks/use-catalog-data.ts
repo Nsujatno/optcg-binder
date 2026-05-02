@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ToastVariant } from "@/hooks/use-toast";
-import { getCardsBySetClient, getSetsClient } from "@/lib/api-client";
+import { getCardsBySetClient, getFilteredCardsClient, getSetsClient } from "@/lib/api-client";
 import type { CardRecord, SetRecord } from "@/lib/types";
 
 export function useCatalogData(onError?: (message: string, variant?: ToastVariant) => void) {
@@ -13,6 +13,7 @@ export function useCatalogData(onError?: (message: string, variant?: ToastVarian
     const [modalOpen, setModalOpen] = useState(false);
     const [modalSearch, setModalSearch] = useState("");
     const [modalError, setModalError] = useState("");
+    const [modalSelectedSetOverride, setModalSelectedSetOverride] = useState<SetRecord | null>(null);
     const [setLoading, setSetLoading] = useState(false);
     const setErrorMessage = useCallback(
         (message: string, variant: ToastVariant = "error") => {
@@ -52,8 +53,9 @@ export function useCatalogData(onError?: (message: string, variant?: ToastVarian
     }, []);
 
     const selectedSet = useMemo(
-        () => sets.find((set) => set.id === selectedSetId) ?? null,
-        [selectedSetId, sets],
+        () =>
+            modalSelectedSetOverride ?? sets.find((set) => set.id === selectedSetId) ?? null,
+        [modalSelectedSetOverride, selectedSetId, sets],
     );
     const cards = selectedSetId ? cardsBySetId[selectedSetId] ?? [] : [];
     const cardLoading = selectedSetId ? loadingBySetId[selectedSetId] ?? false : false;
@@ -84,6 +86,7 @@ export function useCatalogData(onError?: (message: string, variant?: ToastVarian
 
     async function openSetModal(setId: string) {
         setSelectedSetId(setId);
+        setModalSelectedSetOverride(null);
         setModalSearch("");
         setModalOpen(true);
 
@@ -115,9 +118,55 @@ export function useCatalogData(onError?: (message: string, variant?: ToastVarian
         }
     }
 
+    async function openCardNameModal(cardName: string) {
+        const trimmed = cardName.trim();
+        if (!trimmed) {
+            return;
+        }
+
+        const syntheticSetId = `name-search:${trimmed.toLowerCase()}`;
+        setSelectedSetId(syntheticSetId);
+        setModalSelectedSetOverride({
+            id: syntheticSetId,
+            code: "Search",
+            name: `Results for "${trimmed}"`,
+            cardCount: 0,
+        });
+        setModalSearch("");
+        setModalOpen(true);
+
+        if (cardsBySetId[syntheticSetId]) {
+            return;
+        }
+
+        if (loadingBySetId[syntheticSetId]) {
+            return;
+        }
+
+        setLoadingBySetId((current) => ({
+            ...current,
+            [syntheticSetId]: true,
+        }));
+        try {
+            const payload = await getFilteredCardsClient(trimmed);
+            setCardsBySetId((current) => ({
+                ...current,
+                [syntheticSetId]: payload.cards,
+            }));
+        } catch {
+            setErrorMessage("Could not search cards right now.");
+        } finally {
+            setLoadingBySetId((current) => ({
+                ...current,
+                [syntheticSetId]: false,
+            }));
+        }
+    }
+
     function closeSetModal() {
         setModalOpen(false);
         setModalSearch("");
+        setModalSelectedSetOverride(null);
     }
 
     return {
@@ -125,6 +174,7 @@ export function useCatalogData(onError?: (message: string, variant?: ToastVarian
         selectedSetId,
         selectedSet,
         openSetModal,
+        openCardNameModal,
         closeSetModal,
         modalOpen,
         cards,

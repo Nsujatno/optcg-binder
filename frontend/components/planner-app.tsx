@@ -62,6 +62,7 @@ export function PlannerApp() {
             selectedSetId={planner.selectedSetId}
             setLoading={planner.setLoading}
             openSetModal={planner.openSetModal}
+            openCardNameModal={planner.openCardNameModal}
           />
 
           <PlannerCanvas
