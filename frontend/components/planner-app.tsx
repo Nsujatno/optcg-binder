@@ -65,23 +65,23 @@ export function PlannerApp() {
             openCardNameModal={planner.openCardNameModal}
           />
 
-          <PlannerCanvas
-            activeLayout={planner.activeLayout}
-            activeTemplate={planner.activeTemplate}
-            activePage={planner.activePage}
+            <PlannerCanvas
+              activeLayout={planner.activeLayout}
+              activeTemplate={planner.activeTemplate}
+              activePage={planner.activePage}
             activePageIndex={planner.activePageIndex}
             activeLayoutAssets={planner.activeLayoutAssets}
             selectedRegionId={planner.selectedRegionId}
             setSelectedRegionId={planner.setSelectedRegionId}
             setSelectedSlotId={planner.setSelectedSlotId}
             setActivePageIndex={planner.setActivePageIndex}
-            uploadInputRef={planner.uploadInputRef}
-            handleUploadImage={planner.handleUploadImage}
-            deleteRegionById={planner.deleteRegionById}
-            clearSelectedSlot={planner.clearSelectedSlot}
-            cards={planner.resolvedCardPool}
-            occupiedByArt={planner.occupiedByArt}
-            selectedSlotId={planner.selectedSlotId}
+              uploadInputRef={planner.uploadInputRef}
+              handleUploadImage={planner.handleUploadImage}
+              deleteRegionById={planner.deleteRegionById}
+              clearSelectedSlot={planner.clearSelectedSlot}
+              resolvedCardPool={planner.resolvedCardPool}
+              occupiedByArt={planner.occupiedByArt}
+              selectedSlotId={planner.selectedSlotId}
             handleCardDrop={planner.handleCardDrop}
             handleArtRegionDrop={planner.handleArtRegionDrop}
           />

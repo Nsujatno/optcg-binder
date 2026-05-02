@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ..ai_support import build_vector_id, normalized_name_family, normalize_text
-from ..models import CardRecord, RecommendationPlacement
+from ..contracts.models import CardRecord, RecommendationPlacement
+from ..shared.ai_support import build_vector_id, normalized_name_family, normalize_text
 
 
 @dataclass(frozen=True)

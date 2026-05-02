@@ -2,26 +2,42 @@
 
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { ToastVariant } from "@/hooks/use-toast";
-import type {
-  ArtRegion,
-  BinderLayout,
-  BinderPage,
-  BinderTemplateId,
-  CardRecord,
-} from "@/lib/types";
-import { BINDER_TEMPLATES } from "@/lib/types";
+import type { BinderLayout, BinderPage, BinderTemplateId, CardRecord } from "@/lib/types";
 import {
-  createId,
+  buildLayoutExport,
+  createDuplicatedLayout,
+  addPageToLayout,
+  applyCardDropToPage,
+  applyTemplateToLayout,
+  clearSlotPlacement,
+  duplicatePageInLayout,
+  markLayoutsUpdated,
+  parseImportedLayouts,
+  placeCardInPageSlot,
+  placeCardsInSlots,
+  renameLayout as renameLayoutRecord,
+  updateLayoutById,
+  updateLayoutTheme,
+  updatePageByIndex,
+  upsertCardSnapshot as upsertCardSnapshotRecord,
+} from "@/lib/planner-layout-editor";
+import {
+  getActiveLayout,
+  getActivePagePlacedCardIds,
+  getAvailableSlotIds,
+  getCurrentSlotPosition,
+  getOccupiedByArt,
+  getPlacementCardSnapshots,
+  getSelectedCard,
+  getSelectedRegion,
+  getTemplateValidationById,
+  resolveCardPool,
+} from "@/lib/planner-layout-selectors";
+import {
   createLayout,
-  createPage,
-  getPlacementIdsForLayouts,
-  getSlotsCovered,
   getTemplate,
   loadPersistedState,
-  matchesCardPlacementId,
   PersistedState,
-  sanitizePageForTemplate,
-  slotKey,
   STORAGE_KEY,
   validatePageForTemplate,
 } from "@/lib/planner";
@@ -49,23 +65,12 @@ export function useLayoutManager(
   }, []);
 
   const resolvedCardPool = useMemo(() => {
-    const cardsById = new Map(persistedCardSnapshots.map((card) => [card.id, card]));
-    cards.forEach((card) => {
-      cardsById.set(card.id, card);
-    });
-    return Array.from(cardsById.values());
+    return resolveCardPool(cards, persistedCardSnapshots);
   }, [cards, persistedCardSnapshots]);
 
-  const placementIdsForLayouts = useMemo(
-    () => getPlacementIdsForLayouts(layouts),
-    [layouts],
-  );
   const placementCardSnapshots = useMemo(
-    () =>
-      resolvedCardPool.filter((card) =>
-        placementIdsForLayouts.some((placementId) => matchesCardPlacementId(card, placementId)),
-      ),
-    [placementIdsForLayouts, resolvedCardPool],
+    () => getPlacementCardSnapshots(layouts, resolvedCardPool),
+    [layouts, resolvedCardPool],
   );
 
   useEffect(() => {
@@ -82,7 +87,7 @@ export function useLayoutManager(
   }, [activeLayoutId, layouts, placementCardSnapshots]);
 
   const activeLayout = useMemo(
-    () => layouts.find((layout) => layout.id === activeLayoutId) ?? null,
+    () => getActiveLayout(layouts, activeLayoutId),
     [activeLayoutId, layouts],
   );
   const activeTemplate = useMemo(
@@ -91,84 +96,31 @@ export function useLayoutManager(
   );
   const activePage = activeLayout?.pages[activePageIndex] ?? null;
   const selectedCard = useMemo(
-    () =>
-      resolvedCardPool.find((card) =>
-        matchesCardPlacementId(
-          card,
-          selectedSlotId ? activePage?.placements[selectedSlotId] : undefined,
-        ),
-      ) ?? null,
+    () => getSelectedCard(activePage, resolvedCardPool, selectedSlotId),
     [activePage?.placements, resolvedCardPool, selectedSlotId],
   );
   const selectedRegion = useMemo(
-    () => activePage?.artRegions.find((region) => region.id === selectedRegionId) ?? null,
+    () => getSelectedRegion(activePage, selectedRegionId),
     [activePage?.artRegions, selectedRegionId],
   );
   const occupiedByArt = useMemo(() => {
-    const slots = new Map<string, ArtRegion>();
-    activePage?.artRegions.forEach((region) => {
-      getSlotsCovered(region).forEach((coveredSlot) => slots.set(coveredSlot, region));
-    });
-    return slots;
+    return getOccupiedByArt(activePage);
   }, [activePage?.artRegions]);
   const currentSlotPosition = useMemo(() => {
-    if (!selectedSlotId) {
-      return {
-        row: 0,
-        col: 0,
-      };
-    }
-
-    const [row = "0", col = "0"] = selectedSlotId.split("-");
-    return {
-      row: Number.parseInt(row, 10),
-      col: Number.parseInt(col, 10),
-    };
+    return getCurrentSlotPosition(selectedSlotId);
   }, [selectedSlotId]);
   const activeLayoutAssets = activeLayout?.assets ?? [];
   const activePagePlacedCardIds = useMemo(
-    () => Object.values(activePage?.placements ?? {}),
+    () => getActivePagePlacedCardIds(activePage),
     [activePage?.placements],
   );
   const activePagePlacedCardCount = activePagePlacedCardIds.length;
   const availableSlotIds = useMemo(() => {
-    if (!activePage) {
-      return [];
-    }
-
-    const slots: string[] = [];
-    for (let row = 0; row < activeTemplate.rows; row += 1) {
-      for (let col = 0; col < activeTemplate.cols; col += 1) {
-        const currentSlotId = slotKey(row, col);
-        if (activePage.placements[currentSlotId] || occupiedByArt.has(currentSlotId)) {
-          continue;
-        }
-        slots.push(currentSlotId);
-      }
-    }
-    return slots;
+    return getAvailableSlotIds(activePage, activeTemplate, occupiedByArt);
   }, [activePage, activeTemplate.cols, activeTemplate.rows, occupiedByArt]);
   const remainingPageCapacity = availableSlotIds.length;
   const templateValidationById = useMemo(() => {
-    const entries = new Map<
-      BinderTemplateId,
-      ReturnType<typeof validatePageForTemplate>
-    >();
-    const sourceTemplate = activeTemplate;
-    const pageToValidate = activePage ?? {
-      id: "",
-      placements: {},
-      artRegions: [],
-    };
-
-    BINDER_TEMPLATES.forEach((template) => {
-      entries.set(
-        template.id,
-        validatePageForTemplate(pageToValidate, sourceTemplate, template),
-      );
-    });
-
-    return entries;
+    return getTemplateValidationById(activePage, activeTemplate);
   }, [activePage]);
 
   function updateLayouts(
@@ -176,10 +128,7 @@ export function useLayoutManager(
     nextActiveLayoutId?: string,
   ) {
     setLayouts((currentLayouts) => {
-      const updatedLayouts = updater(currentLayouts).map((layout) => ({
-        ...layout,
-        updatedAt: new Date().toISOString(),
-      }));
+      const updatedLayouts = markLayoutsUpdated(updater(currentLayouts));
       const targetLayoutId =
         nextActiveLayoutId ?? activeLayoutId ?? updatedLayouts[0]?.id ?? "";
       if (targetLayoutId) {
@@ -195,9 +144,7 @@ export function useLayoutManager(
     }
 
     updateLayouts((currentLayouts) =>
-      currentLayouts.map((layout) =>
-        layout.id === activeLayout.id ? updater(layout) : layout,
-      ),
+      updateLayoutById(currentLayouts, activeLayout.id, updater),
     );
   }
 
@@ -206,12 +153,7 @@ export function useLayoutManager(
       return;
     }
 
-    updateActiveLayout((layout) => ({
-      ...layout,
-      pages: layout.pages.map((page, index) =>
-        index === activePageIndex ? updater(page) : page,
-      ),
-    }));
+    updateActiveLayout((layout) => updatePageByIndex(layout, activePageIndex, updater));
   }
 
   function createNewLayout() {
@@ -226,13 +168,7 @@ export function useLayoutManager(
       return;
     }
 
-    const duplicate: BinderLayout = {
-      ...structuredClone(activeLayout),
-      id: createId("layout"),
-      name: `${activeLayout.name} Copy`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const duplicate = createDuplicatedLayout(activeLayout);
 
     updateLayouts((currentLayouts) => [...currentLayouts, duplicate], duplicate.id);
   }
@@ -253,18 +189,12 @@ export function useLayoutManager(
       return;
     }
 
-    updateActiveLayout((layout) => ({
-      ...layout,
-      name: renameDraft.trim(),
-    }));
+    updateActiveLayout((layout) => renameLayoutRecord(layout, renameDraft.trim()));
     setRenameDraft("");
   }
 
   function addPage() {
-    updateActiveLayout((layout) => ({
-      ...layout,
-      pages: [...layout.pages, createPage()],
-    }));
+    updateActiveLayout((layout) => addPageToLayout(layout));
     setActivePageIndex(activeLayout?.pages.length ?? 0);
   }
 
@@ -273,16 +203,7 @@ export function useLayoutManager(
       return;
     }
 
-    const duplicate = structuredClone(activePage);
-    duplicate.id = createId("page");
-    updateActiveLayout((layout) => ({
-      ...layout,
-      pages: [
-        ...layout.pages.slice(0, activePageIndex + 1),
-        duplicate,
-        ...layout.pages.slice(activePageIndex + 1),
-      ],
-    }));
+    updateActiveLayout((layout) => duplicatePageInLayout(layout, activePageIndex));
     setActivePageIndex(activePageIndex + 1);
   }
 
@@ -291,14 +212,7 @@ export function useLayoutManager(
       return;
     }
 
-    updateActivePage((page) => {
-      const nextPlacements = { ...page.placements };
-      delete nextPlacements[selectedSlotId];
-      return {
-        ...page,
-        placements: nextPlacements,
-      };
-    });
+    updateActivePage((page) => clearSlotPlacement(page, selectedSlotId));
   }
 
   function setTemplate(templateId: BinderTemplateId) {
@@ -317,15 +231,9 @@ export function useLayoutManager(
       return;
     }
 
-    updateActiveLayout((layout) => ({
-      ...layout,
-      templateId,
-      pages: layout.pages.map((page, index) =>
-        index === activePageIndex
-          ? sanitizePageForTemplate(page, activeTemplate, template)
-          : page,
-      ),
-    }));
+    updateActiveLayout((layout) =>
+      applyTemplateToLayout(layout, activePageIndex, activeTemplate, templateId),
+    );
     setSelectedRegionId(null);
     setSelectedSlotId("0-0");
   }
@@ -335,37 +243,19 @@ export function useLayoutManager(
       return;
     }
 
-    updateActivePage((page) => ({
-      ...page,
-      placements: {
-        ...page.placements,
-        [targetSlotId]: cardId,
-      },
-    }));
+    updateActivePage((page) => placeCardInPageSlot(page, targetSlotId, cardId));
   }
 
   function updateTheme<K extends keyof BinderLayout["theme"]>(
     key: K,
     value: BinderLayout["theme"][K],
   ) {
-    updateActiveLayout((layout) => ({
-      ...layout,
-      theme: {
-        ...layout.theme,
-        [key]: value,
-      },
-    }));
+    updateActiveLayout((layout) => updateLayoutTheme(layout, key, value));
   }
 
   function exportLayouts() {
     const blob = new Blob(
-      [
-        JSON.stringify(
-          { layouts, activeLayoutId, cardSnapshots: placementCardSnapshots },
-          null,
-          2,
-        ),
-      ],
+      [buildLayoutExport(layouts, activeLayoutId, placementCardSnapshots)],
       { type: "application/json" },
     );
     const url = window.URL.createObjectURL(blob);
@@ -383,10 +273,7 @@ export function useLayoutManager(
     }
 
     const text = await file.text();
-    const parsed = JSON.parse(text) as PersistedState;
-    if (!parsed.layouts?.length) {
-      throw new Error("Invalid layout file");
-    }
+    const parsed = parseImportedLayouts(text) as PersistedState;
     setLayouts(parsed.layouts);
     setActiveLayoutId(parsed.activeLayoutId ?? parsed.layouts[0].id);
     setPersistedCardSnapshots(parsed.cardSnapshots ?? []);
@@ -408,25 +295,7 @@ export function useLayoutManager(
       return;
     }
 
-    updateActivePage((page) => {
-      const nextPlacements = { ...page.placements };
-      const targetCardId = nextPlacements[targetSlotId];
-
-      nextPlacements[targetSlotId] = cardId;
-
-      if (sourceSlotId) {
-        if (targetCardId) {
-          nextPlacements[sourceSlotId] = targetCardId;
-        } else {
-          delete nextPlacements[sourceSlotId];
-        }
-      }
-
-      return {
-        ...page,
-        placements: nextPlacements,
-      };
-    });
+    updateActivePage((page) => applyCardDropToPage(page, targetSlotId, cardId, sourceSlotId));
   }
 
   function placeCardsInNextEmptySlots(cardIds: string[]) {
@@ -439,33 +308,11 @@ export function useLayoutManager(
       return;
     }
 
-    updateActivePage((page) => {
-      const nextPlacements = { ...page.placements };
-      targetSlotIds.forEach((targetSlotId, index) => {
-        const cardId = cardIds[index];
-        if (cardId) {
-          nextPlacements[targetSlotId] = cardId;
-        }
-      });
-
-      return {
-        ...page,
-        placements: nextPlacements,
-      };
-    });
+    updateActivePage((page) => placeCardsInSlots(page, targetSlotIds, cardIds));
   }
 
   function upsertCardSnapshot(card: CardRecord) {
-    setPersistedCardSnapshots((current) => {
-      const index = current.findIndex((item) => item.id === card.id);
-      if (index === -1) {
-        return [...current, card];
-      }
-
-      const next = [...current];
-      next[index] = card;
-      return next;
-    });
+    setPersistedCardSnapshots((current) => upsertCardSnapshotRecord(current, card));
   }
 
   return {

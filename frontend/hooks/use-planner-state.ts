@@ -1,6 +1,6 @@
 "use client";
 
-import { useCatalogData } from "@/hooks/use-catalog-data";
+import { useCatalogData } from "@/hooks/catalog";
 import { useLayoutManager } from "@/hooks/use-layout-manager";
 import { useArtPlacement } from "@/hooks/use-art-placement";
 import { useSlotRecommendations } from "@/hooks/use-slot-recommendations";

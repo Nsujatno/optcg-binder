@@ -130,8 +130,17 @@ Renders the application header and top-level layout actions like creating, dupli
 ### [frontend/components/planner/catalog-sidebar.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/catalog-sidebar.tsx)
 Displays the set picker, card search, and draggable card catalog. It is the planner's source panel for finding and selecting cards.
 
-### [frontend/components/planner/planner-canvas.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas.tsx)
-Renders the active binder layout, page navigation, template switching, placed art regions, and card slot grid. This is the main editing surface where users arrange cards and Michi artwork.
+### [frontend/components/planner/planner-canvas/index.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/index.tsx)
+Acts as the planner canvas composition module. It computes page sizing and totals, mounts the page navigation module, and composes the Michi art layer and card slot grid into the main editing surface.
+
+### [frontend/components/planner/planner-canvas/navigation.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/navigation.tsx)
+Defines the planner canvas page navigation module. It owns the previous and next page controls shown around the active binder page.
+
+### [frontend/components/planner/planner-canvas/art-layer.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/art-layer.tsx)
+Defines the planner canvas Michi art layer module. It renders placed art regions, selection state, drag behavior, and region deletion controls.
+
+### [frontend/components/planner/planner-canvas/slot-grid.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/slot-grid.tsx)
+Defines the planner canvas slot grid module. It renders card slots, card drag and drop behavior, upload affordances for empty slots, and slot clearing actions.
 
 ### [frontend/components/planner/inspector-sidebar.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/inspector-sidebar.tsx)
 Shows slot details, theme controls, and selected Michi art actions. Its role is contextual editing and customization for the currently selected page element.
@@ -144,11 +153,17 @@ Provides the modal workflow for configuring uploaded artwork spans, crop offsets
 ### [frontend/hooks/use-planner-state.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-planner-state.ts)
 Composes the specialized planner hooks into a single interface consumed by the UI. Its role is coordination rather than owning detailed business logic itself.
 
-### [frontend/hooks/use-catalog-data.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-catalog-data.ts)
-Handles fetching sets and cards from the separate backend service, along with search state and loading and error state. It owns the planner's catalog data flow.
+### [frontend/hooks/catalog/index.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/index.ts)
+Acts as the catalog composition hook. It combines the catalog fetch module with the catalog modal module into the planner-facing catalog interface.
+
+### [frontend/hooks/catalog/fetch.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/fetch.ts)
+Defines the catalog fetch module. It owns set loading, per-source card caching, loading state, error reporting, and the backend fetch adapters for set cards and name-search results.
+
+### [frontend/hooks/catalog/modal.ts](C:/Users/natha/one-piece-binder/frontend/hooks/catalog/modal.ts)
+Defines the catalog modal module. It owns the active card source, modal visibility, modal-local search state, and the flow for opening either a set catalog or a card-name search result.
 
 ### [frontend/hooks/use-layout-manager.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-layout-manager.ts)
-Manages binder layouts, pages, selected slots, persistence, theme updates, and drag and drop placement. It is the main state manager for binder editing and local save behavior.
+Acts as the React seam for binder editing. It wires the planner editor modules to React state, persistence effects, and UI-facing actions for layouts, pages, slots, and drag-and-drop behavior.
 
 ### [frontend/hooks/use-art-placement.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-art-placement.ts)
 Encapsulates image upload, crop draft state, art region validation, and placement, edit, and delete logic. Its role is to isolate the Michi-specific workflow from the broader layout manager.
@@ -163,6 +178,12 @@ Defines the shared TypeScript domain models for cards, sets, themes, layouts, pa
 
 ### [frontend/lib/planner.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner.ts)
 Contains planner-specific constants and utility functions such as template lookup, slot helpers, local storage keys, and asset conversion. Its role is shared planner infrastructure that should not live inside React components.
+
+### [frontend/lib/planner-layout-editor.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner-layout-editor.ts)
+Defines the planner layout editor module for binder mutations. It owns pure layout, page, slot, theme, import/export, and card snapshot update operations used by the React hook seam.
+
+### [frontend/lib/planner-layout-selectors.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner-layout-selectors.ts)
+Defines the planner layout selector module. It owns derived planner lookups such as active layout selection, occupied art slots, available slots, template validation maps, and placement-backed card resolution.
 
 ### [frontend/lib/catalog-sample.ts](C:/Users/natha/one-piece-binder/frontend/lib/catalog-sample.ts)
 Provides a local fallback sample catalog for development or API failure cases. It ensures the planner can still function when the external card source is unavailable.
@@ -179,25 +200,43 @@ Lists the Python packages required to run the active backend service, including 
 Documents the Python backend environment variables for local development, including the OPTCG source configuration, Upstash Redis and Vector credentials, premium-card filtering, and AI cache and rate-limit settings.
 
 ### [backend/app/main.py](C:/Users/natha/one-piece-binder/backend/app/main.py)
-Defines the FastAPI application, CORS policy, and the public HTTP routes used by the frontend for health, catalog lookups, premium export, and AI slot recommendations. It also wires the AI rate-limit store and response caching path.
+Defines the FastAPI application composition module. It creates the app, applies CORS, and mounts the domain route modules from `backend/app/routes`.
 
 ### [backend/app/config.py](C:/Users/natha/one-piece-binder/backend/app/config.py)
 Loads normalized runtime configuration for the Python backend from environment variables and the local `backend/.env` file.
 
-### [backend/app/models.py](C:/Users/natha/one-piece-binder/backend/app/models.py)
-Defines the Pydantic validation models for upstream OPTCG API payloads, the normalized catalog response models, and the AI recommendation and premium export request and response models.
+### [backend/app/dependencies.py](C:/Users/natha/one-piece-binder/backend/app/dependencies.py)
+Defines the shared backend adapter seam. It constructs and exposes the normalized runtime dependencies used by route modules, including settings, the OPTCG client, the recommendation modules, the Redis-backed state adapter, and allowed card-image hosts.
+
+### [backend/app/contracts/models.py](C:/Users/natha/one-piece-binder/backend/app/contracts/models.py)
+Defines the backend contract models. It holds the Pydantic validation models for upstream OPTCG API payloads, normalized catalog response models, and AI recommendation and premium export request and response models.
 
 ### [backend/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend/app/optcg_client.py)
 Handles all live OPTCG API calls, caches results with TTLs, and normalizes raw set and card data into the frontend-facing contract without using hardcoded catalog fixtures.
 
-### [backend/app/cache.py](C:/Users/natha/one-piece-binder/backend/app/cache.py)
-Implements the Python backend's lightweight in-memory TTL cache used to reduce repeated upstream API calls.
+### [backend/app/shared/cache.py](C:/Users/natha/one-piece-binder/backend/app/shared/cache.py)
+Implements the backend's lightweight in-memory TTL cache. It is shared infrastructure used by upstream catalog loading and local AI support fallbacks.
 
-### [backend/app/ai_support.py](C:/Users/natha/one-piece-binder/backend/app/ai_support.py)
-Provides shared AI helpers for recommendation-related infrastructure, including normalized text and vector ID utilities, request cache hashing, rate-limit subject resolution, and the Redis-backed state adapter with local fallback behavior.
+### [backend/app/shared/ai_support.py](C:/Users/natha/one-piece-binder/backend/app/shared/ai_support.py)
+Provides shared AI support infrastructure, including normalized text and vector ID helpers, request cache hashing, rate-limit subject resolution, and the Redis-backed state adapter with local fallback behavior.
 
-### [backend/app/slot_recommendations.py](C:/Users/natha/one-piece-binder/backend/app/slot_recommendations.py)
-Acts as the orchestration module for slot recommendations. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final response returned to the planner UI.
+### [backend/app/recommendation/service.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/service.py)
+Acts as the slot recommendation orchestration module. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final recommendation records returned to the planner UI.
+
+### [backend/app/recommendation/requests.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/requests.py)
+Defines the slot recommendation request module. It owns the non-HTTP request pipeline for rate limiting, request guards, response cache lookup and write-back, card loading, and final response assembly before the route adapter returns the payload.
+
+### [backend/app/routes/health.py](C:/Users/natha/one-piece-binder/backend/app/routes/health.py)
+Defines the backend health route module. Its only role is to expose the lightweight liveness check.
+
+### [backend/app/routes/catalog.py](C:/Users/natha/one-piece-binder/backend/app/routes/catalog.py)
+Defines the catalog route module. It owns the HTTP handlers for set lookup, set card lookup, card search, filtered card lookup, and market price lookup.
+
+### [backend/app/routes/recommendations.py](C:/Users/natha/one-piece-binder/backend/app/routes/recommendations.py)
+Defines the AI slot recommendation route module. It is the thin HTTP adapter that resolves the request subject and delegates the recommendation request pipeline into the slot recommendation request module.
+
+### [backend/app/routes/card_image.py](C:/Users/natha/one-piece-binder/backend/app/routes/card_image.py)
+Defines the card-image proxy route module. It validates allowed hosts and image responses before returning proxied remote card art to the frontend.
 
 ### [backend/app/recommendation/premium_catalog.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/premium_catalog.py)
 Owns premium-card filtering, cached premium catalog construction, premium export shaping, and cache-key generation for recommendation requests.
