@@ -31,14 +31,13 @@ export function CatalogSearch({ onSubmit }: CatalogSearchProps) {
       >
         <svg
           aria-hidden="true"
-          className="h-5 w-5 text-white"
+          className="h-6 w-6 text-white"
           fill="currentColor"
           viewBox="0 0 24 24"
         >
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          <path d="M10 4a6 6 0 1 0 3.89 10.56l4.27 4.27a1 1 0 0 0 1.42-1.42l-4.27-4.27A6 6 0 0 0 10 4Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z" />
         </svg>
       </button>
     </form>
   );
 }
-
