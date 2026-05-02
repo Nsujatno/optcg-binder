@@ -130,8 +130,17 @@ Renders the application header and top-level layout actions like creating, dupli
 ### [frontend/components/planner/catalog-sidebar.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/catalog-sidebar.tsx)
 Displays the set picker, card search, and draggable card catalog. It is the planner's source panel for finding and selecting cards.
 
-### [frontend/components/planner/planner-canvas.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas.tsx)
-Renders the active binder layout, page navigation, template switching, placed art regions, and card slot grid. This is the main editing surface where users arrange cards and Michi artwork.
+### [frontend/components/planner/planner-canvas/index.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/index.tsx)
+Acts as the planner canvas composition module. It computes page sizing and totals, mounts the page navigation module, and composes the Michi art layer and card slot grid into the main editing surface.
+
+### [frontend/components/planner/planner-canvas/navigation.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/navigation.tsx)
+Defines the planner canvas page navigation module. It owns the previous and next page controls shown around the active binder page.
+
+### [frontend/components/planner/planner-canvas/art-layer.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/art-layer.tsx)
+Defines the planner canvas Michi art layer module. It renders placed art regions, selection state, drag behavior, and region deletion controls.
+
+### [frontend/components/planner/planner-canvas/slot-grid.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas/slot-grid.tsx)
+Defines the planner canvas slot grid module. It renders card slots, card drag and drop behavior, upload affordances for empty slots, and slot clearing actions.
 
 ### [frontend/components/planner/inspector-sidebar.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/inspector-sidebar.tsx)
 Shows slot details, theme controls, and selected Michi art actions. Its role is contextual editing and customization for the currently selected page element.
