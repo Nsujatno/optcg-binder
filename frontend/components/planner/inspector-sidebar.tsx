@@ -40,7 +40,7 @@ export function InspectorSidebar({
         <div className="mb-4 rounded-3xl border border-white/10 bg-white/5 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h4 className="font-semibold">Meechi art</h4>
+              <h4 className="font-semibold">Michi art</h4>
               <p className="mt-3 text-xs text-slate-400">
                 Span: {selectedRegion.colSpan} x {selectedRegion.rowSpan}
               </p>
