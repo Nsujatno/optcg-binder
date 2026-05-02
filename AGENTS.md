@@ -148,7 +148,7 @@ Composes the specialized planner hooks into a single interface consumed by the U
 Handles fetching sets and cards from the separate backend service, along with search state and loading and error state. It owns the planner's catalog data flow.
 
 ### [frontend/hooks/use-layout-manager.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-layout-manager.ts)
-Manages binder layouts, pages, selected slots, persistence, theme updates, and drag and drop placement. It is the main state manager for binder editing and local save behavior.
+Acts as the React seam for binder editing. It wires the planner editor modules to React state, persistence effects, and UI-facing actions for layouts, pages, slots, and drag-and-drop behavior.
 
 ### [frontend/hooks/use-art-placement.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-art-placement.ts)
 Encapsulates image upload, crop draft state, art region validation, and placement, edit, and delete logic. Its role is to isolate the Michi-specific workflow from the broader layout manager.
@@ -163,6 +163,12 @@ Defines the shared TypeScript domain models for cards, sets, themes, layouts, pa
 
 ### [frontend/lib/planner.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner.ts)
 Contains planner-specific constants and utility functions such as template lookup, slot helpers, local storage keys, and asset conversion. Its role is shared planner infrastructure that should not live inside React components.
+
+### [frontend/lib/planner-layout-editor.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner-layout-editor.ts)
+Defines the planner layout editor module for binder mutations. It owns pure layout, page, slot, theme, import/export, and card snapshot update operations used by the React hook seam.
+
+### [frontend/lib/planner-layout-selectors.ts](C:/Users/natha/one-piece-binder/frontend/lib/planner-layout-selectors.ts)
+Defines the planner layout selector module. It owns derived planner lookups such as active layout selection, occupied art slots, available slots, template validation maps, and placement-backed card resolution.
 
 ### [frontend/lib/catalog-sample.ts](C:/Users/natha/one-piece-binder/frontend/lib/catalog-sample.ts)
 Provides a local fallback sample catalog for development or API failure cases. It ensures the planner can still function when the external card source is unavailable.
