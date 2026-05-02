@@ -17,7 +17,7 @@ export function CatalogSearch({ onSubmit }: CatalogSearchProps) {
         onSubmit(cardNameQuery);
       }}
     >
-      <div className="flex w-95/100 items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2 py-1.5">
+      <div className="flex w-full items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-2 py-1.5">
         <input
           className="w-full bg-transparent px-2 py-1.5 text-sm outline-none placeholder:text-slate-500"
           onChange={(event) => setCardNameQuery(event.target.value)}
