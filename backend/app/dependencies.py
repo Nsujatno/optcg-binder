@@ -3,10 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from functools import lru_cache
 
-from .ai_support import RedisBackedState
 from .config import Settings, get_settings
 from .optcg_client import OptcgClient
-from .slot_recommendations import SlotRecommendationService
+from .recommendation.requests import SlotRecommendationRequestService
+from .recommendation.service import SlotRecommendationService
+from .shared.ai_support import RedisBackedState
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,7 @@ class BackendDependencies:
     client: OptcgClient
     redis_state: RedisBackedState
     recommendation_service: SlotRecommendationService
+    recommendation_request_service: SlotRecommendationRequestService
     allowed_card_image_hosts: frozenset[str]
 
 
@@ -29,11 +31,20 @@ def get_backend_dependencies() -> BackendDependencies:
 
     print("AI rate limit store:", "upstash")
 
+    client = OptcgClient(settings.optcg_api_base)
+    recommendation_service = SlotRecommendationService(settings)
+
     return BackendDependencies(
         settings=settings,
-        client=OptcgClient(settings.optcg_api_base),
+        client=client,
         redis_state=redis_state,
-        recommendation_service=SlotRecommendationService(settings),
+        recommendation_service=recommendation_service,
+        recommendation_request_service=SlotRecommendationRequestService(
+            settings=settings,
+            client=client,
+            redis_state=redis_state,
+            recommendation_service=recommendation_service,
+        ),
         allowed_card_image_hosts=frozenset(
             {
                 "www.optcgapi.com",

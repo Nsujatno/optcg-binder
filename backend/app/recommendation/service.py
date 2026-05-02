@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from .config import Settings
-from .models import CardRecord, SlotRecommendation, SlotRecommendationRequest
-from .recommendation.premium_catalog import PremiumCatalog
-from .recommendation.recommendation_profiles import PremiumCardProfile
-from .recommendation.recommendation_ranking import (
+from ..config import Settings
+from ..contracts.models import CardRecord, SlotRecommendation, SlotRecommendationRequest
+from .premium_catalog import PremiumCatalog
+from .recommendation_profiles import PremiumCardProfile
+from .recommendation_ranking import (
     RankedCandidate,
     build_reason_text,
     diversify,
     score_candidate_metadata,
 )
-from .recommendation.recommendation_spatial import choose_anchor_cards, compose_query_vector
-from .recommendation.vector_store import UpstashVectorClient
+from .recommendation_spatial import choose_anchor_cards, compose_query_vector
+from .vector_store import UpstashVectorClient
 
 
 class SlotRecommendationService:

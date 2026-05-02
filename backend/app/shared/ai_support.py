@@ -8,8 +8,8 @@ from typing import Any
 
 import httpx
 
+from ..config import Settings
 from .cache import TTLCache
-from .config import Settings
 
 
 FAMILY_STOP_WORDS = {

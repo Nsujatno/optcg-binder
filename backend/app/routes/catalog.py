@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 
+from ..contracts.models import CardsResponse, MarketPriceResponse, SetsResponse
 from ..dependencies import BackendDependencies, get_backend_dependencies
-from ..models import CardsResponse, MarketPriceResponse, SetsResponse
 
 
 router = APIRouter(prefix="/api")

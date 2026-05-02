@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from ..ai_support import stable_json_hash
-from ..cache import TTLCache
 from ..config import Settings
-from ..models import CardRecord, PremiumCardExportRecord, SlotRecommendationRequest
+from ..contracts.models import CardRecord, PremiumCardExportRecord, SlotRecommendationRequest
+from ..shared.ai_support import stable_json_hash
+from ..shared.cache import TTLCache
 from .recommendation_profiles import PremiumCardProfile
 
 

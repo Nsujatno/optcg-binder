@@ -200,22 +200,25 @@ Defines the FastAPI application composition module. It creates the app, applies 
 Loads normalized runtime configuration for the Python backend from environment variables and the local `backend/.env` file.
 
 ### [backend/app/dependencies.py](C:/Users/natha/one-piece-binder/backend/app/dependencies.py)
-Defines the shared backend adapter seam. It constructs and exposes the normalized runtime dependencies used by route modules, including settings, the OPTCG client, the Redis-backed state adapter, the slot recommendation module, and allowed card-image hosts.
+Defines the shared backend adapter seam. It constructs and exposes the normalized runtime dependencies used by route modules, including settings, the OPTCG client, the recommendation modules, the Redis-backed state adapter, and allowed card-image hosts.
 
-### [backend/app/models.py](C:/Users/natha/one-piece-binder/backend/app/models.py)
-Defines the Pydantic validation models for upstream OPTCG API payloads, the normalized catalog response models, and the AI recommendation and premium export request and response models.
+### [backend/app/contracts/models.py](C:/Users/natha/one-piece-binder/backend/app/contracts/models.py)
+Defines the backend contract models. It holds the Pydantic validation models for upstream OPTCG API payloads, normalized catalog response models, and AI recommendation and premium export request and response models.
 
 ### [backend/app/optcg_client.py](C:/Users/natha/one-piece-binder/backend/app/optcg_client.py)
 Handles all live OPTCG API calls, caches results with TTLs, and normalizes raw set and card data into the frontend-facing contract without using hardcoded catalog fixtures.
 
-### [backend/app/cache.py](C:/Users/natha/one-piece-binder/backend/app/cache.py)
-Implements the Python backend's lightweight in-memory TTL cache used to reduce repeated upstream API calls.
+### [backend/app/shared/cache.py](C:/Users/natha/one-piece-binder/backend/app/shared/cache.py)
+Implements the backend's lightweight in-memory TTL cache. It is shared infrastructure used by upstream catalog loading and local AI support fallbacks.
 
-### [backend/app/ai_support.py](C:/Users/natha/one-piece-binder/backend/app/ai_support.py)
-Provides shared AI helpers for recommendation-related infrastructure, including normalized text and vector ID utilities, request cache hashing, rate-limit subject resolution, and the Redis-backed state adapter with local fallback behavior.
+### [backend/app/shared/ai_support.py](C:/Users/natha/one-piece-binder/backend/app/shared/ai_support.py)
+Provides shared AI support infrastructure, including normalized text and vector ID helpers, request cache hashing, rate-limit subject resolution, and the Redis-backed state adapter with local fallback behavior.
 
-### [backend/app/slot_recommendations.py](C:/Users/natha/one-piece-binder/backend/app/slot_recommendations.py)
-Acts as the orchestration module for slot recommendations. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final response returned to the planner UI.
+### [backend/app/recommendation/service.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/service.py)
+Acts as the slot recommendation orchestration module. It chooses between the visual vector path and the metadata-only fallback path, then shapes the final recommendation records returned to the planner UI.
+
+### [backend/app/recommendation/requests.py](C:/Users/natha/one-piece-binder/backend/app/recommendation/requests.py)
+Defines the slot recommendation request module. It owns the non-HTTP request pipeline for rate limiting, request guards, response cache lookup and write-back, card loading, and final response assembly before the route adapter returns the payload.
 
 ### [backend/app/routes/health.py](C:/Users/natha/one-piece-binder/backend/app/routes/health.py)
 Defines the backend health route module. Its only role is to expose the lightweight liveness check.
@@ -224,7 +227,7 @@ Defines the backend health route module. Its only role is to expose the lightwei
 Defines the catalog route module. It owns the HTTP handlers for set lookup, set card lookup, card search, filtered card lookup, and market price lookup.
 
 ### [backend/app/routes/recommendations.py](C:/Users/natha/one-piece-binder/backend/app/routes/recommendations.py)
-Defines the AI slot recommendation route module. It owns the HTTP request handling seam for rate limiting, cache lookup and write-back, request guards, and delegation into the slot recommendation module.
+Defines the AI slot recommendation route module. It is the thin HTTP adapter that resolves the request subject and delegates the recommendation request pipeline into the slot recommendation request module.
 
 ### [backend/app/routes/card_image.py](C:/Users/natha/one-piece-binder/backend/app/routes/card_image.py)
 Defines the card-image proxy route module. It validates allowed hosts and image responses before returning proxied remote card art to the frontend.

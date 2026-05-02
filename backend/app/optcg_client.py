@@ -5,8 +5,8 @@ from urllib.parse import urlencode
 import httpx
 from fastapi import HTTPException
 
-from .cache import TTLCache
-from .models import CardRecord, ExternalCard, ExternalSet, SetRecord
+from .contracts.models import CardRecord, ExternalCard, ExternalSet, SetRecord
+from .shared.cache import TTLCache
 
 
 ONE_HOUR = 60 * 60
