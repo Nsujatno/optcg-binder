@@ -131,13 +131,13 @@ Renders the application header and top-level layout actions like creating, dupli
 Displays the set picker, card search, and draggable card catalog. It is the planner's source panel for finding and selecting cards.
 
 ### [frontend/components/planner/planner-canvas.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/planner-canvas.tsx)
-Renders the active binder layout, page navigation, template switching, placed art regions, and card slot grid. This is the main editing surface where users arrange cards and Meechi artwork.
+Renders the active binder layout, page navigation, template switching, placed art regions, and card slot grid. This is the main editing surface where users arrange cards and Michi artwork.
 
 ### [frontend/components/planner/inspector-sidebar.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/inspector-sidebar.tsx)
-Shows slot details, theme controls, and selected Meechi art actions. Its role is contextual editing and customization for the currently selected page element.
+Shows slot details, theme controls, and selected Michi art actions. Its role is contextual editing and customization for the currently selected page element.
 
 ### [frontend/components/planner/crop-modal.tsx](C:/Users/natha/one-piece-binder/frontend/components/planner/crop-modal.tsx)
-Provides the modal workflow for configuring uploaded artwork spans, crop offsets, zoom, and fit mode. It handles the interactive Meechi placement preview before artwork is committed to the page.
+Provides the modal workflow for configuring uploaded artwork spans, crop offsets, zoom, and fit mode. It handles the interactive Michi placement preview before artwork is committed to the page.
 
 ## Planner State and Hooks
 
@@ -151,7 +151,7 @@ Handles fetching sets and cards from the separate backend service, along with se
 Manages binder layouts, pages, selected slots, persistence, theme updates, and drag and drop placement. It is the main state manager for binder editing and local save behavior.
 
 ### [frontend/hooks/use-art-placement.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-art-placement.ts)
-Encapsulates image upload, crop draft state, art region validation, and placement, edit, and delete logic. Its role is to isolate the Meechi-specific workflow from the broader layout manager.
+Encapsulates image upload, crop draft state, art region validation, and placement, edit, and delete logic. Its role is to isolate the Michi-specific workflow from the broader layout manager.
 
 ### [frontend/hooks/use-slot-recommendations.ts](C:/Users/natha/one-piece-binder/frontend/hooks/use-slot-recommendations.ts)
 Owns the `What matches here?` UI flow for empty slots on eligible pages. It builds the current page context, calls the backend recommendation endpoint, manages the open/close state of the recommendation panel, and applies a chosen suggestion into the selected slot.

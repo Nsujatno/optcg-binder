@@ -226,7 +226,7 @@ export function PlannerCanvas({
 
                 {selectedRegionId === region.id ? (
                   <button
-                    aria-label="Remove Meechi art"
+                    aria-label="Remove Michi art"
                     className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
                     onClick={(event) => {
                       event.stopPropagation();
@@ -347,7 +347,7 @@ export function PlannerCanvas({
 
                   {canUploadArt ? (
                     <button
-                      aria-label="Upload Meechi art"
+                      aria-label="Upload Michi art"
                       className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
                       onClick={(event) => {
                         event.stopPropagation();

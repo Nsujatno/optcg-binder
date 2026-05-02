@@ -1,8 +1,11 @@
+ "use client";
+
+import { CatalogSearch } from "@/components/planner/catalog-search";
 import type { PlannerState } from "@/hooks/use-planner-state";
 
 type CatalogSidebarProps = Pick<
   PlannerState,
-  "sets" | "selectedSetId" | "setLoading" | "openSetModal"
+  "sets" | "selectedSetId" | "setLoading" | "openSetModal" | "openCardNameModal"
 >;
 
 export function CatalogSidebar({
@@ -10,6 +13,7 @@ export function CatalogSidebar({
   selectedSetId,
   setLoading,
   openSetModal,
+  openCardNameModal,
 }: CatalogSidebarProps) {
   return (
     <aside className="rounded-[28px] border border-white/10 bg-slate-950/55 p-4 backdrop-blur">
@@ -21,6 +25,8 @@ export function CatalogSidebar({
           </p>
         </div>
       </div>
+
+      <CatalogSearch onSubmit={openCardNameModal} />
 
       <div className="planner-scrollbar max-h-[70vh] space-y-2 overflow-y-auto pr-1">
         {sets.map((set) => (
