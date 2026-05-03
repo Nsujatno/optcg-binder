@@ -174,6 +174,30 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     });
   }
 
+  function editRegionById(regionId: string) {
+    layout.setSelectedRegionId(regionId);
+    const region = layout.activePage?.artRegions.find((item) => item.id === regionId);
+    if (!region) {
+      return;
+    }
+
+    const asset = layout.activeLayout?.assets.find((item) => item.id === region.assetId);
+    if (!asset) {
+      return;
+    }
+
+    setCropDraft({
+      asset,
+      rowSpan: region.rowSpan,
+      colSpan: region.colSpan,
+      cropX: region.cropX,
+      cropY: region.cropY,
+      zoom: region.zoom,
+      fitMode: region.fitMode,
+      editingRegionId: region.id,
+    });
+  }
+
   function toggleRegionLock() {
     if (!layout.selectedRegion) {
       return;
@@ -220,6 +244,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     confirmCropPlacement,
     handleArtRegionDrop,
     editSelectedRegion,
+    editRegionById,
     toggleRegionLock,
     deleteSelectedRegion,
     deleteRegionById,

@@ -9,11 +9,15 @@ type PlannerCanvasSlotGridProps = Pick<
   | "activePage"
   | "uploadInputRef"
   | "clearSelectedSlot"
+  | "clearSlotById"
   | "resolvedCardPool"
   | "occupiedByArt"
   | "selectedSlotId"
   | "setSelectedSlotId"
   | "setSelectedRegionId"
+  | "openSingleSlotCatalogModal"
+  | "editRegionById"
+  | "deleteRegionById"
   | "handleCardDrop"
   | "handleArtRegionDrop"
 > & {
@@ -27,11 +31,15 @@ export function PlannerCanvasSlotGrid({
   activePage,
   uploadInputRef,
   clearSelectedSlot,
+  clearSlotById,
   resolvedCardPool,
   occupiedByArt,
   selectedSlotId,
   setSelectedSlotId,
   setSelectedRegionId,
+  openSingleSlotCatalogModal,
+  editRegionById,
+  deleteRegionById,
   handleCardDrop,
   handleArtRegionDrop,
   startDraggingCursor,
@@ -45,8 +53,9 @@ export function PlannerCanvasSlotGrid({
         resolvedCardPool.find((card) => matchesCardPlacementId(card, placedCardId)) ?? undefined;
       const artRegion = occupiedByArt.get(key);
       const isSelected = selectedSlotId === key;
-      const canUploadArt = isSelected && !placedCard && !artRegion;
-      const canClearCard = isSelected && Boolean(placedCardId);
+      const canUploadArt = !placedCard && !artRegion;
+      const canClearCard = Boolean(placedCardId);
+      const canEditArt = Boolean(artRegion) && !placedCard;
       const slotStyle = activeLayout?.theme.emptySlotStyle ?? "glass";
       const slotCursorClass = placedCardId
         ? "cursor-grab active:cursor-grabbing"
@@ -65,7 +74,7 @@ export function PlannerCanvasSlotGrid({
       return (
         <div
           key={key}
-          className="relative"
+          className="group relative"
           style={{
             gridColumn: `${col + 1}`,
             gridRow: `${row + 1}`,
@@ -141,49 +150,107 @@ export function PlannerCanvasSlotGrid({
             ) : null}
           </button>
 
-          {canUploadArt ? (
-            <button
-              aria-label="Upload Michi art"
-              className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedSlotId(key);
-                uploadInputRef.current?.click();
-              }}
-              type="button"
-            >
-              <svg
-                aria-hidden="true"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.8"
-                viewBox="0 0 24 24"
+          <div
+            className={`absolute top-2 right-2 z-40 flex flex-col gap-2 transition ${
+              isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            {!canUploadArt && canClearCard ? (
+              <button
+                aria-label="Remove card from slot"
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-slate-950/80 text-xs leading-none text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  clearSlotById(key);
+                }}
+                type="button"
               >
-                <path d="M12 3v11" />
-                <path d="M8.5 6.5 12 3l3.5 3.5" />
-                <path d="M4.5 13.5v4A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5v-4" />
-              </svg>
-            </button>
-          ) : null}
+                x
+              </button>
+            ) : null}
 
-          {canClearCard ? (
-            <button
-              aria-label="Remove card from slot"
-              className="absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-slate-950/80 text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
-              onClick={(event) => {
-                event.stopPropagation();
-                setSelectedSlotId(key);
-                setSelectedRegionId(null);
-                clearSelectedSlot();
-              }}
-              type="button"
-            >
-              x
-            </button>
-          ) : null}
+            {canUploadArt ? (
+              <>
+                <button
+                  aria-label="Upload Michi art"
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedSlotId(key);
+                    setSelectedRegionId(null);
+                    uploadInputRef.current?.click();
+                  }}
+                  type="button"
+                >
+                  <svg
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.8"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 3v11" />
+                    <path d="M8.5 6.5 12 3l3.5 3.5" />
+                    <path d="M4.5 13.5v4A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5v-4" />
+                  </svg>
+                </button>
+                <button
+                  aria-label="Add card to slot"
+                  className="flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-slate-950/80 text-sm text-white transition hover:border-white/40 hover:bg-slate-900"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedSlotId(key);
+                    setSelectedRegionId(null);
+                    openSingleSlotCatalogModal(key);
+                  }}
+                  type="button"
+                >
+                  +
+                </button>
+              </>
+            ) : null}
+
+            {canEditArt ? (
+              <>
+                <button
+                  aria-label="Edit Michi art"
+                  className="rounded-full border border-white/20 bg-slate-950/80 px-2 py-1 text-xs text-white transition hover:border-white/40 hover:bg-slate-900"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (artRegion) {
+                      setSelectedSlotId(key);
+                      setSelectedRegionId(artRegion.id);
+                      editRegionById(artRegion.id);
+                    }
+                  }}
+                  type="button"
+                >
+                  Edit image
+                </button>
+                <button
+                  aria-label="Remove Michi art"
+                  className="rounded-full border border-white/20 bg-slate-950/80 px-2 py-1 text-xs text-white transition hover:border-rose-300/60 hover:bg-rose-500/30"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (artRegion) {
+                      setSelectedRegionId(artRegion.id);
+                      deleteRegionById(artRegion.id);
+                    }
+                  }}
+                  type="button"
+                >
+                  Remove image
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       );
     }),

@@ -1,12 +1,15 @@
  "use client";
 
 import { CatalogSearch } from "@/components/planner/catalog-search";
-import type { PlannerState } from "@/hooks/use-planner-state";
+import type { SetRecord } from "@/lib/types";
 
-type CatalogSidebarProps = Pick<
-  PlannerState,
-  "sets" | "selectedSetId" | "setLoading" | "openSetModal" | "openCardNameModal"
->;
+type CatalogSidebarProps = {
+  sets: SetRecord[];
+  selectedSetId: string;
+  setLoading: boolean;
+  openSetModal: (setId: string) => void;
+  openCardNameModal: (query: string) => void;
+};
 
 export function CatalogSidebar({
   sets,

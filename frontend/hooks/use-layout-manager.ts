@@ -10,6 +10,7 @@ import {
   applyCardDropToPage,
   applyTemplateToLayout,
   clearSlotPlacement,
+  clearPagePlacementsAndArt,
   duplicatePageInLayout,
   markLayoutsUpdated,
   parseImportedLayouts,
@@ -215,6 +216,24 @@ export function useLayoutManager(
     updateActivePage((page) => clearSlotPlacement(page, selectedSlotId));
   }
 
+  function clearSlotById(slotId: string) {
+    if (!activePage || !slotId) {
+      return;
+    }
+
+    updateActivePage((page) => clearSlotPlacement(page, slotId));
+  }
+
+  function clearActivePage() {
+    if (!activePage) {
+      return;
+    }
+
+    updateActivePage((page) => clearPagePlacementsAndArt(page));
+    setSelectedRegionId(null);
+    setSelectedSlotId("0-0");
+  }
+
   function setTemplate(templateId: BinderTemplateId) {
     const template = getTemplate(templateId);
     if (!activePage) {
@@ -352,6 +371,8 @@ export function useLayoutManager(
     addPage,
     duplicatePage,
     clearSelectedSlot,
+    clearSlotById,
+    clearActivePage,
     placeCardInSlot,
     setTemplate,
     updateTheme,
