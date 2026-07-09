@@ -24,7 +24,7 @@ export function PlannerActionRail({
   triggerImport,
 }: PlannerActionRailProps) {
   return (
-    <aside className="relative z-[250] flex flex-col items-center gap-2 rounded-[28px] border border-white/10 bg-slate-950/55 p-3 backdrop-blur">
+    <aside className="relative z-[50] flex flex-col items-center gap-2 rounded-[28px] border border-white/10 bg-slate-950/55 p-3 backdrop-blur">
       <AddCardRailAction onClick={openAddCard} />
       <ClearPageRailAction onClick={openClearPage} />
       <DownloadRailAction onClick={openDownload} />

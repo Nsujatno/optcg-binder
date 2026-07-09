@@ -65,40 +65,6 @@ class OptcgClient:
         cards.sort(key=lambda item: item.cardSetId)
         return self.set_cards_cache.set(cache_key, cards)
 
-    async def search_cards(self, query: str, set_id: str | None) -> list[CardRecord]:
-        normalized_query = query.strip().lower()
-        cache_key = f"search:{set_id or 'all'}:{normalized_query}"
-        cached = self.search_cache.get(cache_key)
-        if cached is not None:
-            return cached
-
-        if set_id:
-            cards = await self.fetch_cards_by_set(set_id)
-        else:
-            cards = await self.fetch_all_set_cards()
-
-        if not normalized_query:
-            results = cards[:100]
-        else:
-            results = [
-                card
-                for card in cards
-                if normalized_query
-                in " ".join(
-                    [
-                        card.name,
-                        card.cardSetId,
-                        card.text,
-                        card.type,
-                        card.color,
-                        card.rarity,
-                        " ".join(card.subTypes),
-                    ]
-                ).lower()
-            ][:100]
-
-        return self.search_cache.set(cache_key, results)
-
     async def fetch_cards_filtered_by_name(self, card_name: str) -> list[CardRecord]:
         normalized_query = card_name.strip().lower()
         if not normalized_query:

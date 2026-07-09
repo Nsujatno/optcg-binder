@@ -72,12 +72,6 @@ export async function getCardsBySetClient(setId: string) {
   );
 }
 
-export async function searchCardsClient(query: string, setId: string) {
-  return requestJson<{ cards: CardRecord[] }>(
-    `/api/cards/search?q=${encodeURIComponent(query)}&setId=${encodeURIComponent(setId)}`,
-  );
-}
-
 export async function getFilteredCardsClient(cardName: string) {
   return requestJson<{ cards: CardRecord[] }>(
     `/api/cards/filtered?card_name=${encodeURIComponent(cardName)}`,

@@ -24,15 +24,6 @@ async def get_cards_by_set(
     return CardsResponse(cards=await dependencies.client.fetch_cards_by_set(set_id))
 
 
-@router.get("/cards/search", response_model=CardsResponse)
-async def search_cards(
-    q: str = Query(default=""),
-    setId: str | None = Query(default=None),
-    dependencies: BackendDependencies = Depends(get_backend_dependencies),
-) -> CardsResponse:
-    return CardsResponse(cards=await dependencies.client.search_cards(q, setId))
-
-
 @router.get("/cards/filtered", response_model=CardsResponse)
 async def get_filtered_cards(
     card_name: str = Query(default=""),

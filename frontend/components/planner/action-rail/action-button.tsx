@@ -6,14 +6,15 @@ type ActionRailButtonProps = {
   label: string;
   onClick: () => void;
   children: ReactNode;
+  className?: string;
 };
 
-export function ActionRailButton({ label, onClick, children }: ActionRailButtonProps) {
+export function ActionRailButton({ label, onClick, children, className }: ActionRailButtonProps) {
   return (
     <div className="group relative">
       <button
         aria-label={label}
-        className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-white transition hover:border-white/30 hover:bg-white/10"
+        className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/5 text-white transition hover:border-white/30 hover:bg-white/10 ${className ?? ""}`}
         onClick={onClick}
         type="button"
       >
