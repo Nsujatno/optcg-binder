@@ -30,6 +30,7 @@ export type SetRecord = {
   name: string;
   code: string;
   cardCount: number;
+  category: string;
 };
 
 export type RecommendationPlacementRecord = {

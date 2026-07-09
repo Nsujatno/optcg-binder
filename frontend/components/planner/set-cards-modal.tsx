@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import type { PlannerState } from "@/hooks/use-planner-state";
-import { formatPrice } from "@/lib/planner";
+import { formatPrice, groupSetsByCategory } from "@/lib/planner";
+
+// How many cards to render initially and to reveal each time the user scrolls near the end.
+const CARD_PAGE_SIZE = 12;
 
 type SetCardsModalProps = Pick<
   PlannerState,
@@ -45,7 +48,13 @@ export function SetCardsModal({
   placeCardInSlot,
 }: SetCardsModalProps) {
   const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
+  const [visibleCount, setVisibleCount] = useState(CARD_PAGE_SIZE);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const placedCardIds = useMemo(() => new Set(activePagePlacedCardIds), [activePagePlacedCardIds]);
+
+  const visibleCards = filteredCards.slice(0, visibleCount);
+  const hasMoreCards = visibleCount < filteredCards.length;
 
   useEffect(() => {
     if (!modalOpen) {
@@ -72,6 +81,42 @@ export function SetCardsModal({
   useEffect(() => {
     setSelectedCardIds([]);
   }, [selectedSetId]);
+
+  // Reset the visible window when switching source/search (adjust state during render).
+  const [windowedSetId, setWindowedSetId] = useState(selectedSetId);
+  if (windowedSetId !== selectedSetId) {
+    setWindowedSetId(selectedSetId);
+    setVisibleCount(CARD_PAGE_SIZE);
+  }
+
+  // Scroll back to the top when the shown source/search changes.
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0 });
+  }, [selectedSetId]);
+
+  // Reveal more cards as the sentinel near the bottom scrolls into view.
+  useEffect(() => {
+    if (!hasMoreCards) {
+      return;
+    }
+
+    const root = scrollContainerRef.current;
+    const target = sentinelRef.current;
+    if (!root || !target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((count) => count + CARD_PAGE_SIZE);
+        }
+      },
+      { root, rootMargin: "200px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMoreCards, visibleCount, filteredCards]);
 
   useEffect(() => {
     setSelectedCardIds((current) =>
@@ -158,27 +203,34 @@ export function SetCardsModal({
         </form>
 
         <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="planner-scrollbar overflow-y-auto rounded-2xl border border-white/10 bg-white/5 p-2">
-            {sets.map((set) => (
-              <button
-                key={set.id}
-                className={`mb-2 flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition last:mb-0 ${
-                  selectedSetId === set.id
-                    ? "border-cyan-300 bg-cyan-300/10 text-white"
-                    : "border-white/10 bg-white/5 text-slate-300"
-                }`}
-                onClick={() => void selectModalSet(set.id)}
-                type="button"
-              >
-                <span className="shrink-0 text-xs uppercase tracking-[0.18em] text-slate-400">
-                  {set.code}
-                </span>
-                <span className="truncate">{set.name}</span>
-              </button>
+          <aside className="planner-scrollbar space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-white/5 p-2">
+            {groupSetsByCategory(sets).map((group) => (
+              <div key={group.category} className="space-y-2">
+                <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  {group.label}
+                </p>
+                {group.sets.map((set) => (
+                  <button
+                    key={set.id}
+                    className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition ${
+                      selectedSetId === set.id
+                        ? "border-cyan-300 bg-cyan-300/10 text-white"
+                        : "border-white/10 bg-white/5 text-slate-300"
+                    }`}
+                    onClick={() => void selectModalSet(set.id)}
+                    type="button"
+                  >
+                    <span className="shrink-0 text-xs uppercase tracking-[0.18em] text-slate-400">
+                      {set.code}
+                    </span>
+                    <span className="truncate">{set.name}</span>
+                  </button>
+                ))}
+              </div>
             ))}
           </aside>
 
-          <div className="planner-scrollbar min-h-0 overflow-y-auto pr-1">
+          <div className="planner-scrollbar min-h-0 overflow-y-auto pr-1" ref={scrollContainerRef}>
             {!selectedSetId ? (
               <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center text-sm text-slate-300">
                 Choose a set or search for a card name to load catalog results.
@@ -193,7 +245,7 @@ export function SetCardsModal({
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {filteredCards.map((card) => {
+                {visibleCards.map((card) => {
                   const isSelected = selectedCardIdSet.has(card.id);
                   const isPlaced = placedCardIds.has(card.id);
                   const atSelectionLimit =
@@ -236,6 +288,14 @@ export function SetCardsModal({
                     </button>
                   );
                 })}
+                {hasMoreCards ? (
+                  <div
+                    className="col-span-full py-4 text-center text-xs text-slate-500"
+                    ref={sentinelRef}
+                  >
+                    Loading more cards...
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

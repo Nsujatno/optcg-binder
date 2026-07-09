@@ -129,17 +129,20 @@ export const SAMPLE_SETS: SetRecord[] = [
     name: "Romance Dawn",
     code: "OP-01",
     cardCount: SAMPLE_CARDS.filter((card) => card.setId === "OP-01").length,
+    category: "booster",
   },
   {
     id: "OP-02",
     name: "Paramount War",
     code: "OP-02",
     cardCount: SAMPLE_CARDS.filter((card) => card.setId === "OP-02").length,
+    category: "booster",
   },
   {
     id: "OP-03",
     name: "Pillars of Strength",
     code: "OP-03",
     cardCount: SAMPLE_CARDS.filter((card) => card.setId === "OP-03").length,
+    category: "booster",
   },
 ];
