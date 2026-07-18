@@ -88,6 +88,14 @@ export function clearSlotPlacement(page: BinderPage, selectedSlotId: string) {
     };
 }
 
+export function clearPagePlacementsAndArt(page: BinderPage) {
+    return {
+        ...page,
+        placements: {},
+        artRegions: [],
+    };
+}
+
 export function applyTemplateToLayout(
     layout: BinderLayout,
     activePageIndex: number,

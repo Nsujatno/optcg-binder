@@ -6,6 +6,7 @@ import type {
     BinderTemplateId,
     CardRecord,
     FitMode,
+    SetRecord,
     UploadedAsset,
 } from "@/lib/types";
 import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
@@ -61,6 +62,35 @@ export type TemplateResizeValidation = {
 
 export function createId(prefix: string) {
     return `${prefix}-${crypto.randomUUID()}`;
+}
+
+export type SetGroup = {
+    category: string;
+    label: string;
+    sets: SetRecord[];
+};
+
+const SET_CATEGORY_ORDER: { category: string; label: string }[] = [
+    { category: "booster", label: "Booster Sets" },
+    { category: "starter", label: "Starter Decks" },
+    { category: "don", label: "DON!!" },
+];
+
+export function groupSetsByCategory(sets: SetRecord[]): SetGroup[] {
+    const groups = SET_CATEGORY_ORDER.map(({ category, label }) => ({
+        category,
+        label,
+        sets: sets.filter((set) => set.category === category),
+    }));
+
+    // Surface any unexpected categories so nothing silently disappears.
+    const known = new Set(SET_CATEGORY_ORDER.map((entry) => entry.category));
+    const other = sets.filter((set) => !known.has(set.category));
+    if (other.length) {
+        groups.push({ category: "other", label: "Other", sets: other });
+    }
+
+    return groups.filter((group) => group.sets.length > 0);
 }
 
 export function getTemplate(templateId: BinderTemplateId): BinderTemplate {

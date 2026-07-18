@@ -21,37 +21,22 @@ export function useCatalogModal({
   const [selectedSetId, setSelectedSetId] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSearch, setModalSearch] = useState("");
-  const [modalSelectedSetOverride, setModalSelectedSetOverride] = useState<SetRecord | null>(null);
+  const [catalogMode, setCatalogMode] = useState<"bulk" | "single-slot">("bulk");
+  const [singleSlotId, setSingleSlotId] = useState<string | null>(null);
 
-  const selectedSet = useMemo(
-    () => modalSelectedSetOverride ?? sets.find((set) => set.id === selectedSetId) ?? null,
-    [modalSelectedSetOverride, selectedSetId, sets],
-  );
+  const selectedSet = useMemo(() => sets.find((set) => set.id === selectedSetId) ?? null, [
+    selectedSetId,
+    sets,
+  ]);
   const cards = selectedSetId ? cardsBySetId[selectedSetId] ?? [] : [];
   const cardLoading = selectedSetId ? loadingBySetId[selectedSetId] ?? false : false;
-  const filteredCards = useMemo(() => {
-    const query = modalSearch.trim().toLowerCase();
-    if (!query) {
-      return cards;
-    }
 
-    return cards.filter((card) =>
-      [card.name, card.cardSetId, card.color, card.type, card.rarity, card.text]
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
-    );
-  }, [cards, modalSearch]);
-
-  async function openSetModal(setId: string) {
+  async function selectModalSet(setId: string) {
     setSelectedSetId(setId);
-    setModalSelectedSetOverride(null);
-    setModalSearch("");
-    setModalOpen(true);
     await ensureSetCardsLoaded(setId);
   }
 
-  async function openCardNameModal(cardName: string) {
+  async function submitModalSearch(cardName: string) {
     const trimmed = cardName.trim();
     if (!trimmed) {
       return;
@@ -59,21 +44,29 @@ export function useCatalogModal({
 
     const syntheticSetId = `name-search:${trimmed.toLowerCase()}`;
     setSelectedSetId(syntheticSetId);
-    setModalSelectedSetOverride({
-      id: syntheticSetId,
-      code: "Search",
-      name: `Results for "${trimmed}"`,
-      cardCount: 0,
-    });
-    setModalSearch("");
-    setModalOpen(true);
     await ensureNameSearchLoaded(syntheticSetId, trimmed);
+  }
+
+  function resetModalContext(mode: "bulk" | "single-slot", slotId: string | null) {
+    setCatalogMode(mode);
+    setSingleSlotId(slotId);
+    setSelectedSetId("");
+    setModalSearch("");
+  }
+
+  function openBulkCatalogModal() {
+    resetModalContext("bulk", null);
+    setModalOpen(true);
+  }
+
+  function openSingleSlotCatalogModal(slotId: string) {
+    resetModalContext("single-slot", slotId);
+    setModalOpen(true);
   }
 
   function closeSetModal() {
     setModalOpen(false);
-    setModalSearch("");
-    setModalSelectedSetOverride(null);
+    resetModalContext("bulk", null);
   }
 
   return {
@@ -81,10 +74,14 @@ export function useCatalogModal({
     selectedSet,
     modalOpen,
     modalSearch,
-    filteredCards,
+    filteredCards: cards,
     cardLoading,
-    openSetModal,
-    openCardNameModal,
+    catalogMode,
+    singleSlotId,
+    openBulkCatalogModal,
+    openSingleSlotCatalogModal,
+    selectModalSet,
+    submitModalSearch,
     closeSetModal,
     setModalSearch,
   };

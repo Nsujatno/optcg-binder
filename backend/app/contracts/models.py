@@ -13,6 +13,27 @@ class ExternalSet(BaseModel):
     set_id: str
 
 
+class ExternalDeck(BaseModel):
+    structure_deck_name: str
+    structure_deck_id: str
+
+
+class ExternalDonCard(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    inventory_price: float | None = None
+    market_price: float | None = None
+    card_name: str
+    card_text: str | None = ""
+    rarity: str
+    card_type: str
+    don_id: str | None = None
+    date_scraped: str | None = None
+    card_image_id: str | None = None
+    card_image: str | None = None
+    optcg_don_name: str | None = None
+
+
 class ExternalCard(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -42,6 +63,7 @@ class SetRecord(BaseModel):
     name: str
     code: str
     cardCount: int = 0
+    category: str = "booster"
 
 
 class CardRecord(BaseModel):

@@ -26,7 +26,10 @@ type PlannerCanvasProps = Pick<
   | "uploadInputRef"
   | "handleUploadImage"
   | "deleteRegionById"
+  | "openSingleSlotCatalogModal"
+  | "editRegionById"
   | "clearSelectedSlot"
+  | "clearSlotById"
   | "resolvedCardPool"
   | "occupiedByArt"
   | "selectedSlotId"
@@ -47,7 +50,10 @@ export function PlannerCanvas({
   uploadInputRef,
   handleUploadImage,
   deleteRegionById,
+  openSingleSlotCatalogModal,
+  editRegionById,
   clearSelectedSlot,
+  clearSlotById,
   resolvedCardPool,
   occupiedByArt,
   selectedSlotId,
@@ -161,8 +167,12 @@ export function PlannerCanvas({
               activeTemplate={activeTemplate}
               resolvedCardPool={resolvedCardPool}
               clearSelectedSlot={clearSelectedSlot}
+              clearSlotById={clearSlotById}
+              deleteRegionById={deleteRegionById}
+              editRegionById={editRegionById}
               handleArtRegionDrop={handleArtRegionDrop}
               handleCardDrop={handleCardDrop}
+              openSingleSlotCatalogModal={openSingleSlotCatalogModal}
               occupiedByArt={occupiedByArt}
               selectedSlotId={selectedSlotId}
               setSelectedRegionId={setSelectedRegionId}

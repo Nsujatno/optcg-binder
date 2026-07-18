@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CatalogSidebar } from "@/components/planner/catalog-sidebar";
+import { PlannerActionRail } from "@/components/planner/action-rail";
+import { ClearPageModal } from "@/components/planner/clear-page-modal";
 import { CropModal } from "@/components/planner/crop-modal";
 import { DownloadModal } from "@/components/planner/download-modal";
 import { InspectorSidebar } from "@/components/planner/inspector-sidebar";
@@ -18,6 +19,7 @@ export function PlannerApp() {
   const { toasts, showToast, dismissToast } = useToast();
   const planner = usePlannerState(showToast);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [clearPageModalOpen, setClearPageModalOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
   async function handleDownload(scope: DownloadScope) {
@@ -46,42 +48,38 @@ export function PlannerApp() {
       className="min-h-screen text-white"
       style={{ backgroundColor: planner.activeLayout?.theme.binderBackground ?? "#0f172a" }}
     >
-      <PlannerHeader
-        exportLayouts={planner.exportLayouts}
-        importLayouts={planner.importLayouts}
-        importInputRef={planner.importInputRef}
-        openDownloadModal={() => {
-          setDownloadModalOpen(true);
-        }}
-      />
+      <PlannerHeader />
 
       <div className="mx-auto flex max-w-[1700px] flex-col gap-4 px-4 py-4 lg:px-6">
-        <div className="grid flex-1 gap-4 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
-          <CatalogSidebar
-            sets={planner.sets}
-            selectedSetId={planner.selectedSetId}
-            setLoading={planner.setLoading}
-            openSetModal={planner.openSetModal}
-            openCardNameModal={planner.openCardNameModal}
+        <div className="grid flex-1 gap-4 xl:grid-cols-[80px_minmax(0,1fr)_360px]">
+          <PlannerActionRail
+            exportLayouts={planner.exportLayouts}
+            openAddCard={planner.openBulkCatalogModal}
+            openClearPage={() => setClearPageModalOpen(true)}
+            openDownload={() => setDownloadModalOpen(true)}
+            triggerImport={() => planner.importInputRef.current?.click()}
           />
 
-            <PlannerCanvas
-              activeLayout={planner.activeLayout}
-              activeTemplate={planner.activeTemplate}
-              activePage={planner.activePage}
+          <PlannerCanvas
+            activeLayout={planner.activeLayout}
+            activeTemplate={planner.activeTemplate}
+            activePage={planner.activePage}
             activePageIndex={planner.activePageIndex}
             activeLayoutAssets={planner.activeLayoutAssets}
             selectedRegionId={planner.selectedRegionId}
             setSelectedRegionId={planner.setSelectedRegionId}
             setSelectedSlotId={planner.setSelectedSlotId}
             setActivePageIndex={planner.setActivePageIndex}
-              uploadInputRef={planner.uploadInputRef}
-              handleUploadImage={planner.handleUploadImage}
-              deleteRegionById={planner.deleteRegionById}
-              clearSelectedSlot={planner.clearSelectedSlot}
-              resolvedCardPool={planner.resolvedCardPool}
-              occupiedByArt={planner.occupiedByArt}
-              selectedSlotId={planner.selectedSlotId}
+            uploadInputRef={planner.uploadInputRef}
+            handleUploadImage={planner.handleUploadImage}
+            deleteRegionById={planner.deleteRegionById}
+            editRegionById={planner.editRegionById}
+            openSingleSlotCatalogModal={planner.openSingleSlotCatalogModal}
+            clearSelectedSlot={planner.clearSelectedSlot}
+            clearSlotById={planner.clearSlotById}
+            resolvedCardPool={planner.resolvedCardPool}
+            occupiedByArt={planner.occupiedByArt}
+            selectedSlotId={planner.selectedSlotId}
             handleCardDrop={planner.handleCardDrop}
             handleArtRegionDrop={planner.handleArtRegionDrop}
           />
@@ -139,6 +137,8 @@ export function PlannerApp() {
       />
 
       <SetCardsModal
+        sets={planner.sets}
+        selectedSetId={planner.selectedSetId}
         modalOpen={planner.modalOpen}
         closeSetModal={planner.closeSetModal}
         selectedSet={planner.selectedSet}
@@ -149,6 +149,20 @@ export function PlannerApp() {
         remainingPageCapacity={planner.remainingPageCapacity}
         activePagePlacedCardIds={planner.activePagePlacedCardIds}
         placeCardsInNextEmptySlots={planner.placeCardsInNextEmptySlots}
+        catalogMode={planner.catalogMode}
+        singleSlotId={planner.singleSlotId}
+        selectModalSet={planner.selectModalSet}
+        submitModalSearch={planner.submitModalSearch}
+        placeCardInSlot={planner.placeCardInSlot}
+      />
+
+      <ClearPageModal
+        onCancel={() => setClearPageModalOpen(false)}
+        onConfirm={() => {
+          planner.clearActivePage();
+          setClearPageModalOpen(false);
+        }}
+        open={clearPageModalOpen}
       />
 
       <DownloadModal
@@ -163,6 +177,13 @@ export function PlannerApp() {
         open={downloadModalOpen}
       />
       <ToastStack toasts={toasts} dismissToast={dismissToast} />
+      <input
+        ref={planner.importInputRef}
+        className="hidden"
+        accept="application/json"
+        onChange={planner.importLayouts}
+        type="file"
+      />
 
       <footer className="mx-auto w-full max-w-[1700px] px-4 pb-6 text-center text-xs text-slate-400 lg:px-6">
         Card art and One Piece-related assets belong to Eiichiro Oda, Bandai, Shonen Jump, and
