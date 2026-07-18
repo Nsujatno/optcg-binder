@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@vercel/analytics";
 import { ChangeEvent, DragEvent, useEffect, useMemo, useRef, useState } from "react";
 import type { ToastVariant } from "@/hooks/use-toast";
 import type { BinderLayout, BinderPage, BinderTemplateId, CardRecord } from "@/lib/types";
@@ -162,6 +163,7 @@ export function useLayoutManager(
     setActivePageIndex(0);
     setSelectedSlotId("0-0");
     updateLayouts((currentLayouts) => [...currentLayouts, layout], layout.id);
+    track("binder_created");
   }
 
   function duplicateLayout() {
@@ -197,6 +199,7 @@ export function useLayoutManager(
   function addPage() {
     updateActiveLayout((layout) => addPageToLayout(layout));
     setActivePageIndex(activeLayout?.pages.length ?? 0);
+    track("page_added", { method: "new" });
   }
 
   function duplicatePage() {
@@ -206,6 +209,7 @@ export function useLayoutManager(
 
     updateActiveLayout((layout) => duplicatePageInLayout(layout, activePageIndex));
     setActivePageIndex(activePageIndex + 1);
+    track("page_added", { method: "duplicate" });
   }
 
   function clearSelectedSlot() {
