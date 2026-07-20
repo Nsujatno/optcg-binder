@@ -1,5 +1,6 @@
 import type {
     ArtRegion,
+    ArtTransform,
     BinderLayout,
     BinderPage,
     BinderTemplate,
@@ -10,6 +11,7 @@ import type {
     UploadedAsset,
 } from "@/lib/types";
 import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
+import { migrateArtTransform } from "@/lib/art-transform";
 import { countOccupiedSlots, resizePageForTemplate } from "@/lib/template-resize";
 
 export const STORAGE_KEY = "one-piece-binder.layouts.v1";
@@ -17,6 +19,14 @@ export const CARD_SLOT_WIDTH = 206;
 export const CARD_SLOT_HEIGHT = 288;
 export const PAGE_GRID_GAP = 12;
 export const PAGE_PADDING = 16;
+
+/** Pixel size of an art region spanning rowSpan x colSpan slots, gutters included. */
+export function getRegionBoxSize(rowSpan: number, colSpan: number) {
+    return {
+        width: colSpan * CARD_SLOT_WIDTH + (colSpan - 1) * PAGE_GRID_GAP,
+        height: rowSpan * CARD_SLOT_HEIGHT + (rowSpan - 1) * PAGE_GRID_GAP,
+    };
+}
 
 export const BINDER_BACKGROUNDS = [
     "#111111",
@@ -40,13 +50,10 @@ export type PersistedState = {
     cardSnapshots?: CardRecord[];
 };
 
-export type CropDraft = {
+export type CropDraft = ArtTransform & {
     asset: UploadedAsset;
     rowSpan: number;
     colSpan: number;
-    cropX: number;
-    cropY: number;
-    zoom: number;
     fitMode: FitMode;
     editingRegionId?: string;
 };
@@ -214,6 +221,50 @@ function compareSlotIds(leftSlotId: string, rightSlotId: string) {
     return Number.parseInt(leftCol, 10) - Number.parseInt(rightCol, 10);
 }
 
+/** An art region as written by the pre-gesture editor. */
+type LegacyArtRegion = ArtRegion & {
+    cropX?: number;
+    cropY?: number;
+};
+
+/**
+ * Bring saved binders onto the current art transform model.
+ *
+ * Regions are detected by the presence of the old `cropX` field, so existing
+ * work upgrades in place on load rather than being dropped. Applied to both
+ * localStorage and imported JSON, since exported files carry the same shape.
+ */
+export function migrateLayouts(layouts: BinderLayout[]): BinderLayout[] {
+    return layouts.map((layout) => {
+        const assets = new Map(layout.assets?.map((asset) => [asset.id, asset]) ?? []);
+
+        return {
+            ...layout,
+            pages: layout.pages.map((page) => ({
+                ...page,
+                artRegions: (page.artRegions ?? []).map((region: LegacyArtRegion) => {
+                    if (region.crop && typeof region.rotation === "number") {
+                        return region;
+                    }
+
+                    const asset = assets.get(region.assetId);
+                    const box = getRegionBoxSize(region.rowSpan, region.colSpan);
+                    const { cropX, cropY, ...rest } = region;
+                    const transform = migrateArtTransform(
+                        { cropX: cropX ?? 0, cropY: cropY ?? 0, zoom: region.zoom ?? 1 },
+                        asset ?? { width: 1, height: 1 },
+                        box.width,
+                        box.height,
+                        region.fitMode ?? "fill",
+                    );
+
+                    return { ...rest, ...transform };
+                }),
+            })),
+        };
+    });
+}
+
 export function loadPersistedState(): PersistedState {
     if (typeof window === "undefined") {
         const layout = createLayout();
@@ -235,7 +286,7 @@ export function loadPersistedState(): PersistedState {
 
         return {
             ...parsed,
-            layouts: parsed.layouts.map((layout) => ({
+            layouts: migrateLayouts(parsed.layouts).map((layout) => ({
                 ...layout,
                 theme: {
                     ...layout.theme,

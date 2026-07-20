@@ -67,16 +67,29 @@ export type UploadedAsset = {
   height: number;
 };
 
-export type ArtRegion = {
+/**
+ * How an image sits inside its region box.
+ *
+ * `crop` is a focal point in source-image space: the source pixel at
+ * (crop.x * asset.width, crop.y * asset.height) is placed at the center of the
+ * box. `zoom` is relative to a cover fit, so 1 exactly covers the box and
+ * values below 1 are only reachable in "contain" mode.
+ */
+export type ArtTransform = {
+  crop: { x: number; y: number };
+  zoom: number;
+  rotation: number;
+  flipH: boolean;
+};
+
+export type ArtRegion = ArtTransform & {
   id: string;
   assetId: string;
   originRow: number;
   originCol: number;
   rowSpan: number;
   colSpan: number;
-  cropX: number;
-  cropY: number;
-  zoom: number;
+  /** "fill" clamps the image to cover the box; "contain" allows letterboxing. */
   fitMode: FitMode;
   locked: boolean;
 };

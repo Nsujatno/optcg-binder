@@ -1,5 +1,6 @@
+import { ArtImage } from "@/components/planner/art-image";
 import type { PlannerState } from "@/hooks/use-planner-state";
-import { slotKey } from "@/lib/planner";
+import { getRegionBoxSize, slotKey } from "@/lib/planner";
 
 type PlannerCanvasArtLayerProps = Pick<
   PlannerState,
@@ -31,6 +32,8 @@ export function PlannerCanvasArtLayer({
     if (!asset) {
       return null;
     }
+
+    const box = getRegionBoxSize(region.rowSpan, region.colSpan);
 
     return (
       <div
@@ -67,15 +70,7 @@ export function PlannerCanvasArtLayer({
           }}
           type="button"
         >
-          <img
-            alt={asset.name}
-            className="absolute inset-0 h-full w-full"
-            src={asset.src}
-            style={{
-              objectFit: region.fitMode === "fill" ? "cover" : "contain",
-              transform: `translate(${region.cropX}%, ${region.cropY}%) scale(${region.zoom})`,
-            }}
-          />
+          <ArtImage asset={asset} boxH={box.height} boxW={box.width} transform={region} />
           <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0" />
           {selectedRegionId === region.id ? (
             <div className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-1 text-[11px] uppercase tracking-[0.18em] text-white">

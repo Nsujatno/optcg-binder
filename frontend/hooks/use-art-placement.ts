@@ -3,8 +3,23 @@
 import { ChangeEvent, DragEvent, useRef, useState } from "react";
 import type { LayoutManager } from "@/hooks/use-layout-manager";
 import { canPlaceArtRegion } from "@/lib/art-region-placement";
+import { DEFAULT_ART_TRANSFORM } from "@/lib/art-transform";
 import { CropDraft, createId, fileToAsset } from "@/lib/planner";
-import type { ArtRegion } from "@/lib/types";
+import type { ArtRegion, UploadedAsset } from "@/lib/types";
+
+function toCropDraft(region: ArtRegion, asset: UploadedAsset): CropDraft {
+  return {
+    asset,
+    rowSpan: region.rowSpan,
+    colSpan: region.colSpan,
+    crop: region.crop,
+    zoom: region.zoom,
+    rotation: region.rotation,
+    flipH: region.flipH,
+    fitMode: region.fitMode,
+    editingRegionId: region.id,
+  };
+}
 
 export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: string) => void) {
   const [cropDraft, setCropDraft] = useState<CropDraft | null>(null);
@@ -19,12 +34,10 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
     try {
       const asset = await fileToAsset(file);
       setCropDraft({
+        ...DEFAULT_ART_TRANSFORM,
         asset,
         rowSpan: 1,
         colSpan: 1,
-        cropX: 0,
-        cropY: 0,
-        zoom: 1,
         fitMode: "fill",
       });
     } catch {
@@ -61,9 +74,10 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
       originCol: layout.currentSlotPosition.col,
       rowSpan: cropDraft.rowSpan,
       colSpan: cropDraft.colSpan,
-      cropX: cropDraft.cropX,
-      cropY: cropDraft.cropY,
+      crop: cropDraft.crop,
       zoom: cropDraft.zoom,
+      rotation: cropDraft.rotation,
+      flipH: cropDraft.flipH,
       fitMode: cropDraft.fitMode,
       locked: true,
     };
@@ -162,16 +176,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
       return;
     }
 
-    setCropDraft({
-      asset,
-      rowSpan: layout.selectedRegion.rowSpan,
-      colSpan: layout.selectedRegion.colSpan,
-      cropX: layout.selectedRegion.cropX,
-      cropY: layout.selectedRegion.cropY,
-      zoom: layout.selectedRegion.zoom,
-      fitMode: layout.selectedRegion.fitMode,
-      editingRegionId: layout.selectedRegion.id,
-    });
+    setCropDraft(toCropDraft(layout.selectedRegion, asset));
   }
 
   function editRegionById(regionId: string) {
@@ -186,16 +191,7 @@ export function useArtPlacement(layout: LayoutManager, setErrorMessage: (value: 
       return;
     }
 
-    setCropDraft({
-      asset,
-      rowSpan: region.rowSpan,
-      colSpan: region.colSpan,
-      cropX: region.cropX,
-      cropY: region.cropY,
-      zoom: region.zoom,
-      fitMode: region.fitMode,
-      editingRegionId: region.id,
-    });
+    setCropDraft(toCropDraft(region, asset));
   }
 
   function toggleRegionLock() {

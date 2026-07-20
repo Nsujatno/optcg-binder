@@ -132,6 +132,7 @@ export function PlannerApp() {
         cropDraft={planner.cropDraft}
         setCropDraft={planner.setCropDraft}
         activeTemplate={planner.activeTemplate}
+        activePage={planner.activePage}
         currentSlotPosition={planner.currentSlotPosition}
         confirmCropPlacement={planner.confirmCropPlacement}
       />

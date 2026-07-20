@@ -2,6 +2,7 @@
 
 import type { BinderLayout, BinderPage, CardRecord } from "@/lib/types";
 import { API_BASE_URL } from "@/lib/api-client";
+import { computeArtDraw } from "@/lib/art-transform";
 import { DEFAULT_THEME } from "@/lib/types";
 import {
   CARD_SLOT_HEIGHT,
@@ -126,18 +127,21 @@ async function renderBinderPage({
     roundedRect(ctx, x, y, width, height, REGION_RADIUS);
     ctx.clip();
 
-    const imageScale = region.fitMode === "fill"
-      ? Math.max(width / image.width, height / image.height)
-      : Math.min(width / image.width, height / image.height);
-    const zoomScale = imageScale * region.zoom;
-    const drawWidth = image.width * zoomScale;
-    const drawHeight = image.height * zoomScale;
-    const offsetX = ((region.cropX / 100) * width) * region.zoom;
-    const offsetY = ((region.cropY / 100) * height) * region.zoom;
-    const drawX = x + (width - drawWidth) / 2 + offsetX;
-    const drawY = y + (height - drawHeight) / 2 + offsetY;
+    // Same geometry the editor and the on-canvas layer render from, so the
+    // exported PNG cannot drift from what the user positioned.
+    const draw = computeArtDraw(
+      region,
+      { width: image.width, height: image.height },
+      width,
+      height,
+    );
 
-    ctx.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+    ctx.translate(x + draw.centerX, y + draw.centerY);
+    ctx.rotate(draw.rotationRad);
+    if (draw.flipH) {
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(image, -draw.drawW / 2, -draw.drawH / 2, draw.drawW, draw.drawH);
     ctx.restore();
   }
 

@@ -3,6 +3,7 @@ import {
     createId,
     createPage,
     getTemplate,
+    migrateLayouts,
     type PersistedState,
     sanitizePageForTemplate,
 } from "@/lib/planner";
@@ -153,7 +154,8 @@ export function parseImportedLayouts(text: string): PersistedState {
         throw new Error("Invalid layout file");
     }
 
-    return parsed;
+    // Files exported before the art editor overhaul carry the old crop fields.
+    return { ...parsed, layouts: migrateLayouts(parsed.layouts) };
 }
 
 export function applyCardDropToPage(
