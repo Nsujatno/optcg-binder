@@ -1,12 +1,12 @@
-import type { BinderLayout, BinderPage, BinderTemplate, BinderTemplateId, CardRecord } from "@/lib/types";
+import type { BinderLayout, BinderPage, BinderTemplateId, CardRecord } from "@/lib/types";
 import {
     createId,
     createPage,
     getTemplate,
     migrateLayouts,
     type PersistedState,
-    sanitizePageForTemplate,
 } from "@/lib/planner";
+import { resizePageForTemplate } from "@/lib/template-resize";
 
 export function markLayoutsUpdated(layouts: BinderLayout[]) {
     return layouts.map((layout) => ({
@@ -99,20 +99,28 @@ export function clearPagePlacementsAndArt(page: BinderPage) {
 
 export function applyTemplateToLayout(
     layout: BinderLayout,
-    activePageIndex: number,
-    sourceTemplate: BinderTemplate,
     templateId: BinderTemplateId,
-) {
+): BinderLayout {
+    if (layout.templateId === templateId) {
+        return layout;
+    }
+
+    const sourceTemplate = getTemplate(layout.templateId);
     const targetTemplate = getTemplate(templateId);
+    const resizedPages: BinderPage[] = [];
+
+    for (const page of layout.pages) {
+        const resizeResult = resizePageForTemplate(page, sourceTemplate, targetTemplate);
+        if (!resizeResult.canApply) {
+            return layout;
+        }
+        resizedPages.push(resizeResult.page);
+    }
 
     return {
         ...layout,
         templateId,
-        pages: layout.pages.map((page, index) =>
-            index === activePageIndex
-                ? sanitizePageForTemplate(page, sourceTemplate, targetTemplate)
-                : page,
-        ),
+        pages: resizedPages,
     };
 }
 

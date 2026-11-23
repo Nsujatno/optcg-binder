@@ -208,6 +208,58 @@ export function validatePageForTemplate(
     };
 }
 
+export function validateLayoutForTemplate(
+    layout: BinderLayout,
+    template: BinderTemplate,
+): TemplateResizeValidation {
+    const templateCapacity = template.rows * template.cols;
+    if (layout.templateId === template.id) {
+        const maxCardCount = layout.pages.reduce(
+            (max, page) => Math.max(max, countOccupiedSlots(page)),
+            0,
+        );
+        return {
+            canApply: true,
+            cardCount: maxCardCount,
+            templateCapacity,
+            hasTooManyCards: false,
+            hasOutOfBoundsArt: false,
+            reason: null,
+        };
+    }
+
+    const sourceTemplate = getTemplate(layout.templateId);
+    let maxCardCount = 0;
+
+    for (let index = 0; index < layout.pages.length; index += 1) {
+        const validation = validatePageForTemplate(
+            layout.pages[index],
+            sourceTemplate,
+            template,
+        );
+        maxCardCount = Math.max(maxCardCount, validation.cardCount);
+
+        if (!validation.canApply) {
+            const pagePrefix = layout.pages.length > 1 ? `Page ${index + 1}: ` : "";
+            return {
+                ...validation,
+                reason: validation.reason
+                    ? `${pagePrefix}${validation.reason}`
+                    : `${pagePrefix}Current cards and Michi art cannot fit this template.`,
+            };
+        }
+    }
+
+    return {
+        canApply: true,
+        cardCount: maxCardCount,
+        templateCapacity,
+        hasTooManyCards: false,
+        hasOutOfBoundsArt: false,
+        reason: null,
+    };
+}
+
 function compareSlotIds(leftSlotId: string, rightSlotId: string) {
     const [leftRow = "0", leftCol = "0"] = leftSlotId.split("-");
     const [rightRow = "0", rightCol = "0"] = rightSlotId.split("-");

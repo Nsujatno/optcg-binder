@@ -41,7 +41,7 @@ import {
   loadPersistedState,
   PersistedState,
   STORAGE_KEY,
-  validatePageForTemplate,
+  validateLayoutForTemplate,
 } from "@/lib/planner";
 
 export function useLayoutManager(
@@ -57,6 +57,10 @@ export function useLayoutManager(
   const [renameDraft, setRenameDraft] = useState("");
   const importInputRef = useRef<HTMLInputElement | null>(null);
   const hasHydrated = useRef(false);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
 
   useEffect(() => {
     const persisted = loadPersistedState();
@@ -85,7 +89,13 @@ export function useLayoutManager(
       activeLayoutId,
       cardSnapshots: placementCardSnapshots,
     };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      onErrorRef.current?.(
+        "Unable to save binder changes to browser storage. Storage may be full or unavailable.",
+      );
+    }
   }, [activeLayoutId, layouts, placementCardSnapshots]);
 
   const activeLayout = useMemo(
@@ -122,8 +132,8 @@ export function useLayoutManager(
   }, [activePage, activeTemplate.cols, activeTemplate.rows, occupiedByArt]);
   const remainingPageCapacity = availableSlotIds.length;
   const templateValidationById = useMemo(() => {
-    return getTemplateValidationById(activePage, activeTemplate);
-  }, [activePage]);
+    return getTemplateValidationById(activeLayout);
+  }, [activeLayout]);
 
   function updateLayouts(
     updater: (currentLayouts: BinderLayout[]) => BinderLayout[],
@@ -239,12 +249,16 @@ export function useLayoutManager(
   }
 
   function setTemplate(templateId: BinderTemplateId) {
-    const template = getTemplate(templateId);
-    if (!activePage) {
+    if (!activeLayout) {
       return;
     }
 
-    const validation = validatePageForTemplate(activePage, activeTemplate, template);
+    if (activeLayout.templateId === templateId) {
+      return;
+    }
+
+    const template = getTemplate(templateId);
+    const validation = validateLayoutForTemplate(activeLayout, template);
     if (!validation.canApply) {
       onError?.(
         validation.reason
@@ -254,9 +268,7 @@ export function useLayoutManager(
       return;
     }
 
-    updateActiveLayout((layout) =>
-      applyTemplateToLayout(layout, activePageIndex, activeTemplate, templateId),
-    );
+    updateActiveLayout((layout) => applyTemplateToLayout(layout, templateId));
     setSelectedRegionId(null);
     setSelectedSlotId("0-0");
   }
