@@ -6,13 +6,13 @@ import type {
     BinderTemplateId,
     CardRecord,
 } from "@/lib/types";
-import { BINDER_TEMPLATES } from "@/lib/types";
+import { BINDER_TEMPLATES, DEFAULT_THEME } from "@/lib/types";
 import {
     getPlacementIdsForLayouts,
     getSlotsCovered,
     matchesCardPlacementId,
     slotKey,
-    validatePageForTemplate,
+    validateLayoutForTemplate,
 } from "@/lib/planner";
 
 export function resolveCardPool(cards: CardRecord[], persistedCardSnapshots: CardRecord[]) {
@@ -102,24 +102,27 @@ export function getAvailableSlotIds(
     return slots;
 }
 
-export function getTemplateValidationById(
-    activePage: BinderPage | null,
-    activeTemplate: BinderTemplate,
-) {
+export function getTemplateValidationById(activeLayout: BinderLayout | null) {
     const entries = new Map<
         BinderTemplateId,
-        ReturnType<typeof validatePageForTemplate>
+        ReturnType<typeof validateLayoutForTemplate>
     >();
-    const pageToValidate = activePage ?? {
+    const layoutToValidate: BinderLayout = activeLayout ?? {
         id: "",
-        placements: {},
-        artRegions: [],
+        name: "",
+        templateId: "3x3",
+        theme: DEFAULT_THEME,
+        assets: [],
+        pages: [{ id: "", placements: {}, artRegions: [] }],
+        createdAt: "",
+        updatedAt: "",
+        schemaVersion: 1,
     };
 
     BINDER_TEMPLATES.forEach((template) => {
         entries.set(
             template.id,
-            validatePageForTemplate(pageToValidate, activeTemplate, template),
+            validateLayoutForTemplate(layoutToValidate, template),
         );
     });
 

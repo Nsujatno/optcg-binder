@@ -68,3 +68,5 @@ To view more info on specific sections look at:
 Frontend: docs/FRONTEND.md
 Backend: docs/BACKEND.md
 Application Overview: docs/APP_OVERVIEW.md
+
+Tests: Add or update Vitest tests under `frontend/__tests__/` for new features and bug fixes, and run `npm run test:frontend` to verify before finishing.
