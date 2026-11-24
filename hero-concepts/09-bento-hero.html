@@ -1,0 +1,489 @@
+<!--
+  Concept 09 · Bento hero · OPTCG Binder hero
+  Trend: High contrast dark bento grid showcasing multiple live product capabilities above the fold.
+  Tests: Communicating drag and drop, Michi crop spanning, AI slot matching, and layout switching at a glance.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>09 · Bento hero · OPTCG Binder hero</title>
+  <meta name="description" content="The free browser binder planner built for One Piece TCG collectors. Drag cards from every set, span custom Michi art across pockets, and get AI slot suggestions.">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #000000;
+      --bg-tile: #181818;
+      --bg-panel: #1F1F1F;
+      --bg-surface: #272727;
+      --bg-stage: #131209;
+      --text-primary: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.64);
+      --text-subtle: rgba(255, 255, 255, 0.44);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --accent: #67E8F9;
+      --accent-soft: rgba(103, 232, 249, 0.12);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --g: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg-page); color: var(--text-primary); font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { min-height: 100svh; overflow-x: clip; }
+    a, button { font-family: inherit; color: inherit; text-decoration: none; }
+
+    /* Named text styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
+    .title-2 { font-size: 18px; line-height: 28px; font-weight: 500; text-wrap: pretty; }
+    .title-3 { font-size: 16px; line-height: 24px; font-weight: 500; text-wrap: balance; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    /* Skip link and focus ring */
+    .skip-link { position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px; background: #FFFFFF; color: #000000; transform: translateY(-80px); opacity: 0; pointer-events: none; transition: transform 300ms var(--ease), opacity 300ms var(--ease); }
+    .skip-link:focus-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Floating nav */
+    .site-header { position: fixed; top: 16px; left: 0; right: 0; z-index: 50; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+    .nav-bar { pointer-events: auto; display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 9999px; background: rgba(24, 24, 24, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border-subtle); }
+    .brand { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; border-radius: 8px; }
+    .brand-mark { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link { display: inline-flex; padding: 4px 12px; border-radius: 9999px; color: var(--text-muted); transition: color 300ms var(--ease), background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .nav-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+    .nav-link:active { transform: scale(0.98); }
+    .btn-nav { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 9999px; background: #FFFFFF; color: #000000; white-space: nowrap; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .btn-nav:hover { background: rgba(255, 255, 255, 0.88); }
+    .btn-nav:active { transform: scale(0.98); }
+    .menu-toggle { display: none; width: 40px; height: 40px; padding: 0; border-radius: 9999px; background: transparent; border: 1px solid var(--border-subtle); cursor: pointer; align-items: center; justify-content: center; flex-direction: column; gap: 4px; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .menu-toggle:hover { background: rgba(255, 255, 255, 0.06); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .toggle-line { width: 16px; height: 2px; border-radius: 2px; background: var(--text-primary); transition: transform 500ms var(--ease); transform-origin: center; }
+    .menu-toggle[aria-expanded="true"] .toggle-line:first-child { transform: translateY(3px) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .toggle-line:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+    /* Mobile full height menu */
+    .mobile-panel { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; gap: 24px; padding: 80px 24px 32px; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease); }
+    .mobile-panel.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-panel-item { opacity: 0; transform: translateY(24px); transition: opacity 340ms var(--ease), transform 340ms var(--ease); }
+    .mobile-panel.is-open .mobile-panel-item { opacity: 1; transform: translateY(0); }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(1) { transition-delay: 60ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(2) { transition-delay: 120ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(3) { transition-delay: 180ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(4) { transition-delay: 240ms; }
+    .mobile-link { display: inline-flex; padding: 8px 0; color: var(--text-primary); }
+
+    /* Hero section */
+    .hero { min-height: 100svh; padding: 80px 32px 32px; overflow-x: clip; display: flex; flex-direction: column; justify-content: center; }
+    .hero-inner { width: 100%; max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+    .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+    .hero-heading { max-width: 680px; background: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-sub { max-width: 680px; color: var(--text-muted); }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 4px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #FFFFFF; color: #000000; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .btn-primary:hover { background: rgba(255, 255, 255, 0.88); transform: translateY(-2px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-icon { width: 16px; height: 16px; flex-shrink: 0; transition: transform 300ms var(--ease); }
+    .btn-primary:hover .btn-icon { transform: translateX(2px); }
+    .hero-proof { color: var(--text-subtle); }
+
+    /* Bento Grid */
+    .bento-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto auto auto; gap: 16px; }
+    .tile { position: relative; background: var(--bg-tile); border: 1px solid var(--border-subtle); border-radius: 24px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; overflow: hidden; opacity: 0; transform: translateY(32px); transition: opacity 650ms var(--ease), transform 650ms var(--ease), border-color 300ms var(--ease); }
+    .tile.is-revealed { opacity: 1; transform: translateY(0); }
+    .tile:hover { border-color: var(--border-strong); }
+    .tile-binder { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+    .tile-crop { grid-column: 3; grid-row: 1; }
+    .tile-ai { grid-column: 4; grid-row: 1; }
+    .tile-switcher { grid-column: 3 / span 2; grid-row: 2; }
+    .tile-trust { grid-column: 1 / -1; grid-row: 3; flex-direction: row; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; }
+
+    .tile-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .tile-copy { display: flex; flex-direction: column; gap: 2px; }
+    .tile-caption { color: var(--text-muted); }
+    .chip { display: inline-flex; align-items: center; gap: 8px; padding: 2px 8px; border-radius: 9999px; background: var(--bg-surface); border: 1px solid var(--border-subtle); color: var(--text-primary); white-space: nowrap; flex-shrink: 0; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); flex-shrink: 0; }
+
+    /* Cards */
+    .card { position: relative; width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; overflow: hidden; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .card-fallback { color: var(--text-subtle); text-align: center; padding: 4px; user-select: none; }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Tile 1: 3x3 Binder with 2x2 Michi span and hovering 3D card */
+    .binder-stage { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; border-radius: 8px; background: var(--bg-stage); border: 1px solid var(--border-subtle); perspective: 900px; }
+    .binder-3d { width: 100%; max-width: 288px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--g); transform-style: preserve-3d; will-change: transform; }
+    .pocket { position: relative; aspect-ratio: 63 / 88; border-radius: 6px; overflow: hidden; background: var(--bg-surface); }
+    .michi-slice-2x2 { position: absolute; top: 0; left: 0; width: calc(200% + var(--g)); height: calc(200% + var(--g)); max-width: none; object-fit: cover; object-position: center; display: block; pointer-events: none; }
+    .michi-c1 .michi-slice-2x2 { left: calc(-100% - var(--g)); }
+    .michi-r1 .michi-slice-2x2 { top: calc(-100% - var(--g)); }
+
+    .pocket-hover-slot { position: relative; aspect-ratio: 63 / 88; border-radius: 6px; background: var(--accent-soft); border: 1px dashed var(--accent); transform-style: preserve-3d; z-index: 4; }
+    .hover-shadow { position: absolute; inset: 4px; border-radius: 6px; background: rgba(0, 0, 0, 0.55); filter: blur(8px); transform: translate3d(4px, 8px, 2px); animation: shadowFloat 4.8s var(--ease) infinite alternate; }
+    .floating-card { position: absolute; inset: 0; box-shadow: 0 20px 32px rgba(0, 0, 0, 0.55); transform: translate3d(-4px, -10px, 28px) rotateY(-10deg) rotateX(6deg) rotateZ(3deg); animation: cardFloat 4.8s var(--ease) infinite alternate; will-change: transform; }
+    @keyframes cardFloat {
+      0% { transform: translate3d(-4px, -8px, 24px) rotateY(-8deg) rotateX(5deg) rotateZ(3deg); }
+      100% { transform: translate3d(-6px, -16px, 40px) rotateY(-12deg) rotateX(8deg) rotateZ(4deg); }
+    }
+    @keyframes shadowFloat {
+      0% { opacity: 0.72; transform: translate3d(4px, 6px, 2px) scale(0.96); }
+      100% { opacity: 0.45; transform: translate3d(8px, 12px, 2px) scale(0.88); }
+    }
+
+    /* Tile 2: Crop tool mock */
+    .crop-viewport { position: relative; flex: 1; min-height: 176px; width: 100%; border-radius: 8px; overflow: hidden; background: var(--bg-panel); border: 1px solid var(--border-subtle); }
+    .crop-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.18) translate3d(0, -2%, 0); animation: cropPan 9s var(--ease) infinite alternate; will-change: transform; }
+    @keyframes cropPan {
+      0% { transform: scale(1.18) translate3d(0, -2%, 0); }
+      50% { transform: scale(1.28) translate3d(-4%, -6%, 0); }
+      100% { transform: scale(1.22) translate3d(4%, 2%, 0); }
+    }
+    .crop-overlay { position: absolute; inset: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 4px; pointer-events: none; }
+    .crop-cell { border-radius: 4px; border: 1px solid rgba(103, 232, 249, 0.72); background: rgba(0, 0, 0, 0.14); }
+
+    /* Tile 3: AI suggestions */
+    .ai-stage { padding: 8px; border-radius: 8px; background: var(--bg-panel); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; }
+    .ai-title { display: flex; align-items: center; gap: 8px; color: var(--text-primary); }
+    .ai-deck { position: relative; height: 152px; overflow: hidden; }
+    .ai-group { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+    .ai-group.is-active { opacity: 1; transform: translateY(0); }
+    .ai-group.is-leaving { opacity: 0; transform: translateY(-16px); }
+    .ai-row { display: flex; align-items: center; gap: 8px; padding: 4px; border-radius: 6px; background: var(--bg-tile); border: 1px solid var(--border-subtle); }
+    .ai-thumb { width: 24px; flex-shrink: 0; }
+    .ai-meta { min-width: 0; display: flex; flex-direction: column; }
+    .ai-name { color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ai-reason { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Tile 4: Grid switcher */
+    .switcher-body { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px; border-radius: 8px; background: var(--bg-panel); border: 1px solid var(--border-subtle); }
+    .morph-box { position: relative; width: 136px; height: 136px; flex-shrink: 0; padding: 8px; border-radius: 8px; background: var(--bg-stage); border: 1px solid var(--border-subtle); }
+    .morph-layer { position: absolute; inset: 8px; display: grid; gap: 4px; opacity: 0; transform: scale(0.92); transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+    .morph-layer.is-active { opacity: 1; transform: scale(1); }
+    .morph-2x2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+    .morph-3x3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+    .morph-4x4 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); }
+    .morph-cell { border-radius: 4px; background: var(--bg-surface); border: 1px solid rgba(255, 255, 255, 0.1); opacity: 0; transform: scale(0.75); transition: opacity 450ms var(--ease), transform 500ms var(--ease); }
+    .morph-layer.is-active .morph-cell { opacity: 1; transform: scale(1); }
+    .morph-cell.is-accent { border-color: rgba(103, 232, 249, 0.55); background: var(--accent-soft); }
+    .switcher-controls { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .grid-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .grid-pill { padding: 4px 12px; border-radius: 9999px; background: var(--bg-tile); border: 1px solid var(--border-subtle); color: var(--text-muted); transition: border-color 300ms var(--ease), color 300ms var(--ease), background-color 300ms var(--ease); }
+    .grid-pill.is-active { border-color: var(--accent); background: var(--accent-soft); color: var(--text-primary); }
+
+    /* Tile 5: Wide trust bar */
+    .trust-items { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+    .trust-item { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); }
+    .check-icon { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+
+    @media (max-width: 1023px) {
+      .hero { padding: 80px 16px 32px; justify-content: flex-start; }
+      .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; }
+      .tile-binder, .tile-switcher, .tile-trust { grid-column: 1 / -1; grid-row: auto; }
+      .tile-crop { grid-column: 1; grid-row: auto; }
+      .tile-ai { grid-column: 2; grid-row: auto; }
+      .tile-trust { flex-direction: column; align-items: flex-start; padding: 16px; }
+    }
+    @media (max-width: 767px) {
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-bar { width: 100%; justify-content: space-between; gap: 12px; }
+      .nav-links, .btn-nav { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .bento-grid { grid-template-columns: 1fr; }
+      .tile-binder, .tile-crop, .tile-ai, .tile-switcher, .tile-trust { grid-column: auto; grid-row: auto; }
+      .switcher-body { flex-direction: column; align-items: flex-start; }
+      .trust-items { gap: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      .tile { opacity: 1; transform: none; }
+      .binder-3d { transform: none !important; }
+      .floating-card { animation: none; transform: translate3d(-4px, -10px, 28px) rotateY(-8deg) rotateX(6deg) rotateZ(3deg); }
+      .hover-shadow { animation: none; }
+      .crop-art { animation: none; transform: scale(1.18) translate3d(0, -2%, 0); }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link title-4" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav-bar" aria-label="Primary">
+      <a class="brand title-4" href="#">
+        <svg class="brand-mark" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <rect x="1" y="1" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="1" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="1" width="3.5" height="3.5" rx="0.8"/>
+          <rect x="1" y="6.25" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="6.25" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="6.25" width="3.5" height="3.5" rx="0.8"/>
+          <rect x="1" y="11.5" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="11.5" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="11.5" width="3.5" height="3.5" rx="0.8"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a class="nav-link title-4" href="#features">Features</a></li>
+        <li><a class="nav-link title-4" href="#how-it-works">How it works</a></li>
+        <li><a class="nav-link title-4" href="#faq">FAQ</a></li>
+      </ul>
+      <a class="btn-nav button-sm" href="/planner">Open the planner</a>
+      <button class="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div id="mobile-menu" class="mobile-panel" aria-hidden="true">
+    <a class="mobile-link mobile-panel-item title-2" href="#features">Features</a>
+    <a class="mobile-link mobile-panel-item title-2" href="#how-it-works">How it works</a>
+    <a class="mobile-link mobile-panel-item title-2" href="#faq">FAQ</a>
+    <div class="mobile-panel-item">
+      <a class="btn-primary button-md" href="/planner">
+        <span>Open the planner</span>
+        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title" class="hero-heading heading-1">
+            The binder planner built<br>for One Piece collectors
+          </h1>
+          <p class="hero-sub body-3">
+            Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.
+          </p>
+          <div class="hero-actions">
+            <a class="btn-primary button-md" href="/planner">
+              <span>Open the planner</span>
+              <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+            </a>
+            <p class="hero-proof caption-5">Saved in your browser. Your art never leaves your device.</p>
+          </div>
+        </div>
+
+        <div class="bento-grid" aria-hidden="true">
+          <article id="tile-binder" class="tile tile-binder">
+            <div class="tile-head">
+              <div class="tile-copy">
+                <h2 class="title-3">Drag and drop every set</h2>
+                <p class="tile-caption caption-5">Arrange leaders, parallels, and 2x2 Michi spans on one page</p>
+              </div>
+              <span class="chip caption-5"><span class="chip-dot"></span>2x2 span</span>
+            </div>
+            <div class="binder-stage">
+              <div id="binder-3d" class="binder-3d">
+                <div class="pocket michi-c0 michi-r0"><img class="michi-slice-2x2" src="assets/michi-storm.jpg" alt="" loading="eager" decoding="async"></div>
+                <div class="pocket michi-c1 michi-r0"><img class="michi-slice-2x2" src="assets/michi-storm.jpg" alt="" loading="eager" decoding="async"></div>
+                <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP01-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-001.jpg" alt="Roronoa Zoro leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                <div class="pocket michi-c0 michi-r1"><img class="michi-slice-2x2" src="assets/michi-storm.jpg" alt="" loading="eager" decoding="async"></div>
+                <div class="pocket michi-c1 michi-r1"><img class="michi-slice-2x2" src="assets/michi-storm.jpg" alt="" loading="eager" decoding="async"></div>
+                <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP05-060</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP05-060.jpg" alt="Monkey D. Luffy leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP03-040</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP03-040.jpg" alt="Nami leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP02-099</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP02-099.jpg" alt="Sakazuki card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                <div class="pocket-hover-slot">
+                  <div class="hover-shadow"></div>
+                  <div class="card floating-card"><span class="card-fallback caption-5">OP01-120</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-120.jpg" alt="Shanks card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile tile-crop">
+            <div class="tile-head">
+              <div class="tile-copy">
+                <h2 class="title-3">Span your art</h2>
+                <p class="tile-caption caption-5">Crop and pan across pockets</p>
+              </div>
+              <span class="chip caption-5"><span class="chip-dot"></span>Zoom 118%</span>
+            </div>
+            <div class="crop-viewport">
+              <img class="crop-art" src="assets/michi-sunset.jpg" alt="" loading="eager" decoding="async">
+              <div class="crop-overlay">
+                <span class="crop-cell"></span><span class="crop-cell"></span>
+                <span class="crop-cell"></span><span class="crop-cell"></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile tile-ai">
+            <div class="tile-copy">
+              <h2 class="title-3">Fill the gap beside your anchor</h2>
+              <p class="tile-caption caption-5">Matches by color, set, and crew</p>
+            </div>
+            <div class="ai-stage">
+              <div class="ai-title caption-4"><span class="chip-dot"></span><span>What matches here?</span></div>
+              <div class="ai-deck">
+                <div class="ai-group is-active" data-ai-group="0">
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">01</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-025.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Roronoa Zoro</span><span class="ai-reason caption-5">Same color · Red</span></div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">01</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-120.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Shanks</span><span class="ai-reason caption-5">Same set · Romance Dawn</span></div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">08</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP08-001.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Tony Tony Chopper</span><span class="ai-reason caption-5">Same color · Green</span></div>
+                  </div>
+                </div>
+                <div class="ai-group" data-ai-group="1">
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">03</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP03-001.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Portgas D. Ace</span><span class="ai-reason caption-5">Same color · Red</span></div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">ST</span><img src="https://www.optcgapi.com/media/static/Card_Images/ST01-012.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Monkey D. Luffy</span><span class="ai-reason caption-5">Straw Hat Crew</span></div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">06</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP06-001.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Uta</span><span class="ai-reason caption-5">Same set · Wings of the Captain</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile tile-switcher">
+            <div class="tile-copy">
+              <h2 class="title-3">1x1 to 4x4</h2>
+              <p class="tile-caption caption-5">Switch binder pocket grids any time</p>
+            </div>
+            <div class="switcher-body">
+              <div class="morph-box">
+                <div class="morph-layer morph-2x2" data-grid-layer="0">
+                  <span class="morph-cell is-accent"></span><span class="morph-cell"></span>
+                  <span class="morph-cell"></span><span class="morph-cell"></span>
+                </div>
+                <div class="morph-layer morph-3x3 is-active" data-grid-layer="1">
+                  <span class="morph-cell is-accent"></span><span class="morph-cell is-accent"></span><span class="morph-cell"></span>
+                  <span class="morph-cell is-accent"></span><span class="morph-cell is-accent"></span><span class="morph-cell"></span>
+                  <span class="morph-cell"></span><span class="morph-cell"></span><span class="morph-cell"></span>
+                </div>
+                <div class="morph-layer morph-4x4" data-grid-layer="2">
+                  <span class="morph-cell is-accent"></span><span class="morph-cell is-accent"></span><span class="morph-cell"></span><span class="morph-cell"></span>
+                  <span class="morph-cell is-accent"></span><span class="morph-cell is-accent"></span><span class="morph-cell"></span><span class="morph-cell"></span>
+                  <span class="morph-cell"></span><span class="morph-cell"></span><span class="morph-cell"></span><span class="morph-cell"></span>
+                  <span class="morph-cell"></span><span class="morph-cell"></span><span class="morph-cell"></span><span class="morph-cell"></span>
+                </div>
+              </div>
+              <div class="switcher-controls">
+                <span class="caption-5 tile-caption">Active binder sheet</span>
+                <div class="grid-pills">
+                  <span class="grid-pill caption-4" data-grid-pill="0">2x2</span>
+                  <span class="grid-pill caption-4 is-active" data-grid-pill="1">3x3</span>
+                  <span class="grid-pill caption-4" data-grid-pill="2">4x4</span>
+                </div>
+                <span class="caption-5 tile-caption">Fits 4 pocket, 9 pocket, and 16 pocket binders</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="tile tile-trust">
+            <div class="trust-items">
+              <span class="trust-item title-3">
+                <svg class="check-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                <span>Free</span>
+              </span>
+              <span class="trust-item title-3">
+                <svg class="check-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                <span>No account</span>
+              </span>
+              <span class="trust-item title-3">
+                <svg class="check-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>
+                <span>Saved in your browser</span>
+              </span>
+            </div>
+            <p class="tile-caption caption-5">Export PNG and JSON any time</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.menu-toggle');
+      const panel = document.getElementById('mobile-menu');
+      if (toggle && panel) {
+        const setOpen = (open) => {
+          toggle.setAttribute('aria-expanded', String(open));
+          panel.setAttribute('aria-hidden', String(!open));
+          panel.classList.toggle('is-open', open);
+        };
+        toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+        panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+      }
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canHover = window.matchMedia('(hover: hover)').matches;
+      const tiles = document.querySelectorAll('.tile');
+
+      if (reduced) {
+        tiles.forEach((t) => t.classList.add('is-revealed'));
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        tiles.forEach((t, i) => setTimeout(() => t.classList.add('is-revealed'), 80 + i * 70));
+      });
+
+      const tileBinder = document.getElementById('tile-binder');
+      const binder3d = document.getElementById('binder-3d');
+      if (canHover && tileBinder && binder3d) {
+        let targetX = 0, targetY = 0, curX = 0, curY = 0, rafId = 0;
+        const tick = () => {
+          curX += (targetX - curX) * 0.09;
+          curY += (targetY - curY) * 0.09;
+          binder3d.style.transform = `rotateY(${curY.toFixed(2)}deg) rotateX(${curX.toFixed(2)}deg)`;
+          if (Math.abs(targetX - curX) > 0.03 || Math.abs(targetY - curY) > 0.03) rafId = requestAnimationFrame(tick);
+          else rafId = 0;
+        };
+        const start = () => { if (!rafId) rafId = requestAnimationFrame(tick); };
+        tileBinder.addEventListener('pointermove', (e) => {
+          const r = tileBinder.getBoundingClientRect();
+          targetY = ((e.clientX - r.left) / r.width - 0.5) * 20;
+          targetX = -((e.clientY - r.top) / r.height - 0.5) * 16;
+          start();
+        }, { passive: true });
+        tileBinder.addEventListener('pointerleave', () => { targetX = 0; targetY = 0; start(); });
+      }
+
+      const aiGroups = document.querySelectorAll('[data-ai-group]');
+      let aiIdx = 0;
+      if (aiGroups.length > 1) {
+        setInterval(() => {
+          const prev = aiGroups[aiIdx];
+          aiIdx = (aiIdx + 1) % aiGroups.length;
+          const next = aiGroups[aiIdx];
+          prev.classList.remove('is-active');
+          prev.classList.add('is-leaving');
+          next.classList.remove('is-leaving');
+          next.classList.add('is-active');
+          setTimeout(() => prev.classList.remove('is-leaving'), 520);
+        }, 2500);
+      }
+
+      const layers = document.querySelectorAll('[data-grid-layer]');
+      const pills = document.querySelectorAll('[data-grid-pill]');
+      let gridIdx = 1;
+      if (layers.length > 1) {
+        setInterval(() => {
+          layers[gridIdx].classList.remove('is-active');
+          pills[gridIdx].classList.remove('is-active');
+          gridIdx = (gridIdx + 1) % layers.length;
+          layers[gridIdx].classList.add('is-active');
+          pills[gridIdx].classList.add('is-active');
+        }, 2000);
+      }
+    })();
+  </script>
+</body>
+</html>

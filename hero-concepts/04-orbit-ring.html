@@ -1,0 +1,402 @@
+<!-- Concept 04 · Orbit ring · Trend: 3D spatial CSS carousel orbiting around centered hero copy · Tests: catalog scale and tactile drag inertia with 12 One Piece cards -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The free browser binder planner built for One Piece Card Game collectors. Drag in cards from every set, span custom art across pockets, and export layouts.">
+  <title>04 · Orbit ring · OPTCG Binder hero</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Crect x='4' y='4' width='4' height='4' rx='1'/%3E%3Crect x='10' y='4' width='4' height='4' rx='1'/%3E%3Crect x='16' y='4' width='4' height='4' rx='1'/%3E%3Crect x='4' y='10' width='4' height='4' rx='1'/%3E%3Crect x='10' y='10' width='4' height='4' rx='1' fill='%2367E8F9'/%3E%3Crect x='16' y='10' width='4' height='4' rx='1'/%3E%3Crect x='4' y='16' width='4' height='4' rx='1'/%3E%3Crect x='10' y='16' width='4' height='4' rx='1'/%3E%3Crect x='16' y='16' width='4' height='4' rx='1'/%3E%3C/g%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000; --surface: #181818; --surface-card: #272727;
+      --text: #FFFFFF; --text-muted: #A1A1AA; --text-subtle: #71717A;
+      --accent: #67E8F9; --border: rgba(255, 255, 255, 0.08); --border-card: rgba(255, 255, 255, 0.14);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --card-w: 136px; --card-h: 190px; --card-r: 8px; --ring-r: 420px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body { background: var(--bg); color: var(--text); min-height: 100svh; overflow-x: clip; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Named text styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+    .heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    .skip-link {
+      position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px;
+      background: var(--text); color: var(--bg); transform: translateY(-96px); opacity: 0;
+      transition: transform 300ms var(--ease), opacity 300ms var(--ease);
+    }
+    .skip-link:focus { transform: translateY(0); opacity: 1; }
+
+    /* Floating navigation */
+    .nav-wrap { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100vw - 32px); }
+    .nav-bar {
+      display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 9999px;
+      background: rgba(24, 24, 24, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; white-space: nowrap; transition: opacity 300ms var(--ease); }
+    .brand:hover { opacity: 0.84; }
+    .brand-mark { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link {
+      display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 9999px;
+      color: var(--text-muted); white-space: nowrap;
+      transition: color 300ms var(--ease), background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .nav-link:hover { color: var(--text); background-color: rgba(255, 255, 255, 0.06); }
+    .nav-link:active { transform: scale(0.98); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 9999px;
+      background: var(--text); color: var(--bg); white-space: nowrap;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .nav-cta:hover { background: #E4E4E7; }
+    .nav-cta:active { transform: scale(0.98); }
+
+    .menu-toggle {
+      display: none; position: relative; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 9999px;
+      background: transparent; color: var(--text); cursor: pointer; align-items: center; justify-content: center;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .menu-toggle:hover { background-color: rgba(255, 255, 255, 0.08); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .menu-line { position: absolute; width: 16px; height: 2px; background: currentColor; border-radius: 2px; transition: transform 500ms var(--ease); }
+    .menu-line--top { transform: translateY(-4px); }
+    .menu-line--bottom { transform: translateY(4px); }
+    .menu-toggle[aria-expanded="true"] .menu-line--top { transform: translateY(0) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .menu-line--bottom { transform: translateY(0) rotate(-45deg); }
+
+    /* Mobile full height menu */
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      gap: 24px; padding: 96px 24px 48px; background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease);
+    }
+    .mobile-menu.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-item { opacity: 0; transform: translateY(24px); transition: transform 500ms var(--ease), opacity 300ms var(--ease); }
+    .mobile-menu.is-open .mobile-item { opacity: 1; transform: translateY(0); }
+    .mobile-menu.is-open .mobile-item:nth-child(1) { transition-delay: 0ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(2) { transition-delay: 60ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(3) { transition-delay: 120ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(4) { transition-delay: 180ms; }
+    .mobile-link { display: inline-block; padding: 4px 0; border-radius: 6px; transition: color 300ms var(--ease); }
+    .mobile-link:hover { color: var(--accent); }
+
+    /* Hero section */
+    .hero {
+      position: relative; min-height: 100svh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px; padding: 96px 24px 48px; overflow-x: clip;
+    }
+    .hero-copy { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; max-width: 680px; }
+    .hero-headline {
+      max-width: 680px; background-image: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { max-width: 680px; color: var(--text-muted); }
+    .cta-group { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 8px; }
+    .cta-primary {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+      background: var(--text); color: var(--bg);
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .cta-primary:hover { background: #E4E4E7; transform: translateY(-2px); }
+    .cta-primary:active { transform: scale(0.98); }
+    .cta-primary svg { width: 16px; height: 16px; transition: transform 300ms var(--ease); }
+    .cta-primary:hover svg { transform: translateX(2px); }
+    .proof-line { display: inline-flex; align-items: center; gap: 8px; color: var(--text-subtle); }
+    .proof-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); flex-shrink: 0; }
+
+    /* 3D Orbit ring stage */
+    .orbit-stage {
+      position: relative; z-index: 1; width: 100%; height: 360px;
+      perspective: 1800px; perspective-origin: 50% 34%;
+      cursor: grab; touch-action: pan-y; user-select: none;
+      animation: orbit-in 500ms var(--ease) both;
+    }
+    .orbit-stage.is-dragging { cursor: grabbing; }
+    @keyframes orbit-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    .orbit-pivot { position: absolute; left: 50%; top: 34%; width: 0; height: 0; transform-style: preserve-3d; }
+    .orbit-ring { position: relative; width: 0; height: 0; transform-style: preserve-3d; will-change: transform; }
+    .orbit-card {
+      position: absolute; left: calc(var(--card-w) / -2); top: calc(var(--card-h) / -2);
+      width: var(--card-w); height: var(--card-h); transform-style: preserve-3d;
+    }
+    .orbit-card-inner {
+      position: relative; width: 100%; height: 100%; aspect-ratio: 63 / 88; border-radius: var(--card-r);
+      overflow: hidden; background: var(--surface-card); border: 1px solid var(--border-card);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6), 0 24px 48px rgba(0, 0, 0, 0.75);
+      will-change: opacity;
+    }
+    .card-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); letter-spacing: 0.04em; }
+    .orbit-card-inner img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; -webkit-user-drag: none; }
+    .orbit-hint {
+      position: relative; z-index: 2; color: var(--text-subtle); display: inline-flex; align-items: center; gap: 8px;
+      padding: 4px 12px; border-radius: 9999px; background: rgba(24, 24, 24, 0.72); border: 1px solid var(--border);
+    }
+
+    /* Tablet scaling */
+    @media (max-width: 1023px) and (min-width: 768px) {
+      :root { --card-w: 116px; --card-h: 162px; --card-r: 6px; --ring-r: 336px; }
+      .orbit-stage { height: 320px; perspective: 1400px; }
+    }
+
+    /* Mobile (< 768px): 8 cards, smaller radius fitting 390px cleanly */
+    @media (max-width: 767px) {
+      :root { --card-w: 92px; --card-h: 128px; --card-r: 6px; --ring-r: 160px; }
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-wrap { width: calc(100vw - 32px); }
+      .nav-bar { width: 100%; justify-content: space-between; padding: 8px 8px 8px 16px; gap: 12px; }
+      .nav-links, .nav-cta { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero { gap: 16px; padding: 80px 16px 32px; }
+      .orbit-stage { height: 224px; perspective: 900px; perspective-origin: 50% 42%; }
+      .orbit-pivot { top: 42%; }
+      .orbit-card[data-desktop-only="true"] { display: none; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .orbit-stage { animation: none; cursor: default; }
+      .orbit-hint { display: none; }
+      .mobile-item, .menu-line { transition: opacity 300ms var(--ease); }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip-link title-4" href="#main-content">Skip to content</a>
+
+  <header class="nav-wrap">
+    <nav class="nav-bar" aria-label="Primary">
+      <a class="brand title-4" href="#top">
+        <svg class="brand-mark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
+          <rect x="1" y="1" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/><rect x="13" y="1" width="4" height="4" rx="1"/>
+          <rect x="1" y="7" width="4" height="4" rx="1"/><rect x="7" y="7" width="4" height="4" rx="1" fill="#67E8F9"/><rect x="13" y="7" width="4" height="4" rx="1"/>
+          <rect x="1" y="13" width="4" height="4" rx="1"/><rect x="7" y="13" width="4" height="4" rx="1"/><rect x="13" y="13" width="4" height="4" rx="1"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a class="nav-link title-4" href="#features">Features</a></li>
+        <li><a class="nav-link title-4" href="#how-it-works">How it works</a></li>
+        <li><a class="nav-link title-4" href="#faq">FAQ</a></li>
+      </ul>
+      <a class="nav-cta button-sm" href="/planner">Open the planner</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+        <span class="menu-line menu-line--top" aria-hidden="true"></span>
+        <span class="menu-line menu-line--bottom" aria-hidden="true"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <a class="mobile-item mobile-link heading-5" href="#features">Features</a>
+    <a class="mobile-item mobile-link heading-5" href="#how-it-works">How it works</a>
+    <a class="mobile-item mobile-link heading-5" href="#faq">FAQ</a>
+    <div class="mobile-item">
+      <a class="cta-primary button-md" href="/planner">
+        <span>Open the planner</span>
+        <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <main id="main-content">
+    <section class="hero" id="hero">
+      <div class="hero-copy">
+        <h1 class="hero-headline heading-1">The binder planner built<br>for One Piece collectors</h1>
+        <p class="hero-sub body-3">Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.</p>
+        <div class="cta-group">
+          <a class="cta-primary button-md" href="/planner">
+            <span>Open the planner</span>
+            <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+          </a>
+          <p class="proof-line caption-5">
+            <span class="proof-dot" aria-hidden="true"></span>
+            <span>Saved in your browser. Your art never leaves your device.</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="orbit-stage" id="orbitStage" aria-hidden="true">
+        <div class="orbit-pivot">
+          <div class="orbit-ring" id="orbitRing"></div>
+        </div>
+      </div>
+
+      <p class="orbit-hint caption-5" aria-hidden="true">Drag to spin</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.menu-toggle');
+      const menu = document.getElementById('mobile-menu');
+      const setMenuOpen = (open) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menu.classList.toggle('is-open', open);
+        menu.setAttribute('aria-hidden', String(!open));
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+
+      toggle.addEventListener('click', () => setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+      menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('is-open')) {
+          setMenuOpen(false);
+          toggle.focus();
+        }
+      });
+
+      // 3D Orbit Ring (12 cards desktop, 8 cards mobile)
+      const CARD_IDS = [
+        'OP01-120', 'OP05-001', 'OP02-004', 'OP03-001',
+        'OP04-001', 'OP06-001', 'OP07-001', 'OP01-025',
+        'OP01-001', 'OP02-001', 'OP05-060', 'ST01-001'
+      ];
+
+      const stage = document.getElementById('orbitStage');
+      const ring = document.getElementById('orbitRing');
+      const mobileQuery = window.matchMedia('(max-width: 767px)');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      const cards = CARD_IDS.map((id, index) => {
+        const slot = document.createElement('div');
+        slot.className = 'orbit-card';
+        if (index >= 8) slot.dataset.desktopOnly = 'true';
+
+        const inner = document.createElement('div');
+        inner.className = 'orbit-card-inner';
+
+        const fallback = document.createElement('span');
+        fallback.className = 'card-fallback caption-5';
+        fallback.textContent = id;
+
+        const img = document.createElement('img');
+        img.src = `https://www.optcgapi.com/media/static/Card_Images/${id}.jpg`;
+        img.alt = '';
+        img.loading = 'eager';
+        img.decoding = 'async';
+        img.referrerPolicy = 'no-referrer';
+        img.addEventListener('error', () => img.remove());
+
+        inner.append(fallback, img);
+        slot.append(inner);
+        ring.append(slot);
+        return { slot, inner, baseDeg: 0 };
+      });
+
+      let activeCards = [];
+      const layoutRing = () => {
+        const count = mobileQuery.matches ? 8 : 12;
+        const step = 360 / count;
+        activeCards = cards.slice(0, count);
+        activeCards.forEach((card, i) => {
+          card.baseDeg = i * step;
+          card.slot.style.transform = `rotateY(${card.baseDeg}deg) translateZ(var(--ring-r))`;
+        });
+      };
+
+      const BASE_VEL = -9; // 40s per full 360deg turn
+      const TILT_X = -14;
+      let angle = 0;
+      let velocity = BASE_VEL;
+      let isDragging = false;
+      let lastX = 0;
+      let lastPointerTime = 0;
+      let prevFrameTime = 0;
+      let rafId = 0;
+
+      const render = () => {
+        ring.style.transform = `rotateX(${TILT_X}deg) rotateY(${angle.toFixed(3)}deg)`;
+        const rad = Math.PI / 180;
+        for (let i = 0; i < activeCards.length; i++) {
+          const facing = Math.cos((angle + activeCards[i].baseDeg) * rad);
+          const opacity = 0.18 + 0.82 * Math.pow((facing + 1) * 0.5, 1.35);
+          activeCards[i].inner.style.opacity = opacity.toFixed(3);
+        }
+      };
+
+      const tick = (now) => {
+        if (!prevFrameTime) prevFrameTime = now;
+        const dt = Math.min(0.05, (now - prevFrameTime) / 1000);
+        prevFrameTime = now;
+
+        if (!isDragging) {
+          angle += velocity * dt;
+          velocity += (BASE_VEL - velocity) * (1 - Math.exp(-2.8 * dt));
+        }
+
+        render();
+        rafId = requestAnimationFrame(tick);
+      };
+
+      stage.addEventListener('pointerdown', (e) => {
+        if (reduceMotion.matches) return;
+        isDragging = true;
+        lastX = e.clientX;
+        lastPointerTime = performance.now();
+        velocity = 0;
+        stage.classList.add('is-dragging');
+        stage.setPointerCapture(e.pointerId);
+      });
+
+      stage.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const now = performance.now();
+        const dx = e.clientX - lastX;
+        const dt = Math.max(0.008, (now - lastPointerTime) / 1000);
+        const dAngle = dx * (mobileQuery.matches ? 0.42 : 0.26);
+
+        angle += dAngle;
+        const instVel = Math.max(-320, Math.min(320, dAngle / dt));
+        velocity = velocity * 0.4 + instVel * 0.6;
+        lastX = e.clientX;
+        lastPointerTime = now;
+      });
+
+      const endDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        if (performance.now() - lastPointerTime > 80) velocity = 0;
+        stage.classList.remove('is-dragging');
+      };
+
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+
+      const syncMotion = () => {
+        cancelAnimationFrame(rafId);
+        prevFrameTime = 0;
+        if (reduceMotion.matches) {
+          angle = 0;
+          velocity = 0;
+          render();
+        } else {
+          velocity = BASE_VEL;
+          rafId = requestAnimationFrame(tick);
+        }
+      };
+
+      layoutRing();
+      syncMotion();
+      mobileQuery.addEventListener('change', () => { layoutRing(); render(); });
+      reduceMotion.addEventListener('change', syncMotion);
+    })();
+  </script>
+</body>
+</html>

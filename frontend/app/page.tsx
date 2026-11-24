@@ -1,5 +1,5 @@
-import { PlannerApp } from "@/components/planner-app";
+import { HeroSection } from "@/components/landing/hero-section";
 
 export default function HomePage() {
-  return <PlannerApp />;
+  return <HeroSection />;
 }

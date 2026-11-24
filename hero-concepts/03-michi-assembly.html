@@ -1,0 +1,424 @@
+<!--
+  Concept 03 · Michi assembly
+  Trend: Spatial 3D assembly and precision alignment showcase
+  Tests: Whether watching split Michi art tiles fly into a 3x3 binder page around an anchor card makes the spanning feature immediately obvious
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>03 · Michi assembly · OPTCG Binder hero</title>
+  <meta name="description" content="Free One Piece TCG binder planner. Span custom Michi art across pockets, preview cards from every set, and export right from your browser.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23131209'/%3E%3Cg fill='%23F5C451'%3E%3Ccircle cx='7' cy='7' r='1.6'/%3E%3Ccircle cx='12' cy='7' r='1.6'/%3E%3Ccircle cx='17' cy='7' r='1.6'/%3E%3Ccircle cx='7' cy='12' r='1.6'/%3E%3Ccircle cx='12' cy='12' r='1.8' fill='%23FFFFFF'/%3E%3Ccircle cx='17' cy='12' r='1.6'/%3E%3Ccircle cx='7' cy='17' r='1.6'/%3E%3Ccircle cx='12' cy='17' r='1.6'/%3E%3Ccircle cx='17' cy='17' r='1.6'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #131209;
+      --bg-surface: #1F1F1F;
+      --bg-well: #181818;
+      --bg-card: #272727;
+      --accent: #F5C451;
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.72);
+      --text-muted: rgba(255, 255, 255, 0.48);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --ease-base: cubic-bezier(0.22, 1, 0.36, 1);
+      --card-w: 108px;
+      --gap: 8px;
+      --card-h: calc(var(--card-w) * 88 / 63);
+      --span-w: calc(var(--card-w) * 3 + var(--gap) * 2);
+      --span-h: calc(var(--card-h) * 3 + var(--gap) * 2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background-color: var(--bg-page); color: var(--text-primary); font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { background-color: var(--bg-page); min-height: 100svh; }
+
+    /* Named text styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    a, button { font-family: inherit; color: inherit; text-decoration: none; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Skip link */
+    .skip-link { position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px; background-color: #FFFFFF; color: #000000; transform: translateY(-96px); opacity: 0; transition: transform 300ms var(--ease-base), opacity 300ms var(--ease-base); }
+    .skip-link:focus-visible { transform: translateY(0); opacity: 1; }
+
+    /* Floating nav */
+    .site-header { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100% - 32px); }
+    .nav-bar { display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 9999px; background-color: rgba(19, 18, 9, 0.72); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border-subtle); }
+    .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); border-radius: 8px; padding: 4px; transition: opacity 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .brand:hover { opacity: 0.84; }
+    .brand:active { transform: scale(0.98); }
+    .brand-mark { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link { display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 9999px; color: var(--text-secondary); transition: color 300ms var(--ease-base), background-color 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .nav-link:hover { color: var(--text-primary); background-color: rgba(255, 255, 255, 0.08); }
+    .nav-link:active { transform: scale(0.98); }
+    .nav-cta { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 9999px; background-color: #FFFFFF; color: #000000; transition: background-color 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .nav-cta:hover { background-color: rgba(255, 255, 255, 0.88); }
+    .nav-cta:active { transform: scale(0.98); }
+
+    /* Mobile menu toggle and full-height panel */
+    .menu-toggle { display: none; position: relative; width: 40px; height: 40px; border-radius: 9999px; border: 1px solid var(--border-subtle); background-color: rgba(255, 255, 255, 0.04); cursor: pointer; align-items: center; justify-content: center; transition: background-color 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .menu-toggle:hover { background-color: rgba(255, 255, 255, 0.1); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .menu-line { position: absolute; width: 16px; height: 1.5px; border-radius: 2px; background-color: var(--text-primary); transition: transform 500ms var(--ease-base); }
+    .menu-line--top { transform: translateY(-3px); }
+    .menu-line--bottom { transform: translateY(3px); }
+    .menu-toggle[aria-expanded="true"] .menu-line--top { transform: translateY(0) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .menu-line--bottom { transform: translateY(0) rotate(-45deg); }
+
+    .mobile-menu { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; padding: 96px 24px 48px; background-color: rgba(19, 18, 9, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease-base); }
+    .mobile-menu.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-menu-item { opacity: 0; transform: translateY(24px); transition: transform 220ms var(--ease-base), opacity 220ms var(--ease-base); }
+    .mobile-menu.is-open .mobile-menu-item { opacity: 1; transform: translateY(0); }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(1) { transition-delay: 0ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(2) { transition-delay: 60ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(3) { transition-delay: 120ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(4) { transition-delay: 180ms; }
+    .mobile-nav-link { display: inline-block; padding: 12px 16px; border-radius: 12px; color: var(--text-primary); transition: background-color 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .mobile-nav-link:hover { background-color: rgba(255, 255, 255, 0.08); }
+    .mobile-nav-link:active { transform: scale(0.98); }
+
+    /* Hero section */
+    .hero { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 96px 24px 48px; overflow-x: clip; }
+    .hero-copy { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; max-width: 680px; }
+    .hero-title { max-width: 680px; background: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+    .hero-sub { max-width: 680px; margin-top: 16px; color: var(--text-secondary); }
+    .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 24px; }
+    .cta-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background-color: #FFFFFF; color: #000000; transition: background-color 300ms var(--ease-base), transform 300ms var(--ease-base); }
+    .cta-primary:hover { background-color: rgba(255, 255, 255, 0.88); transform: translateY(-1px); }
+    .cta-primary:active { transform: scale(0.98); }
+    .cta-icon { width: 16px; height: 16px; flex-shrink: 0; transition: transform 300ms var(--ease-base); }
+    .cta-primary:hover .cta-icon { transform: translateX(2px); }
+    .hero-proof { color: var(--text-muted); }
+
+    /* Visual stage */
+    .visual-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 40px; width: 100%; }
+    .status-chip { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 9999px; background-color: var(--bg-surface); border: 1px solid rgba(245, 196, 81, 0.32); color: var(--text-primary); opacity: 0; transform: translateY(8px); transition: opacity 500ms var(--ease-base), transform 500ms var(--ease-base); }
+    .status-chip.is-visible { opacity: 1; transform: translateY(0); }
+    .status-dot { width: 6px; height: 6px; border-radius: 9999px; background-color: var(--accent); flex-shrink: 0; }
+
+    .stage { perspective: 1100px; display: flex; justify-content: center; align-items: center; padding: 8px 0 16px; }
+    .binder-tilt { transform-style: preserve-3d; will-change: transform; }
+    .binder-page { position: relative; padding: 12px; border-radius: 12px; background-color: var(--bg-surface); border: 1px solid var(--border-subtle); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.56); transform-style: preserve-3d; }
+    .binder-grid { position: relative; display: grid; grid-template-columns: repeat(3, var(--card-w)); grid-template-rows: repeat(3, var(--card-h)); gap: var(--gap); transform-style: preserve-3d; }
+    .pocket { position: relative; width: var(--card-w); height: var(--card-h); transform-style: preserve-3d; }
+    .pocket-well { position: absolute; inset: 0; border-radius: 6px; background-color: var(--bg-well); border: 1px solid rgba(255, 255, 255, 0.05); transform: translateZ(-1px); }
+
+    .tile { position: absolute; inset: 0; border-radius: 6px; overflow: hidden; will-change: transform, opacity; transform: translate3d(var(--tx, 0px), var(--ty, 0px), var(--tz, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) rotateZ(var(--rz, 0deg)) scale(var(--sc, 1)); opacity: 0; transition: transform 900ms var(--ease-base), opacity 700ms var(--ease-base); }
+    .tile.is-scattered { opacity: 0.42; }
+    .tile.is-in { transform: translate3d(0, 0, 1px) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); opacity: 1; }
+
+    .tile--art {
+      background-color: var(--bg-card);
+      background-image: url('assets/michi-sunset.jpg');
+      background-repeat: no-repeat;
+      background-size: auto var(--span-h);
+      background-position-x: calc(-1 * (var(--col) * (var(--card-w) + var(--gap)) + (var(--span-h) * 896 / 1200 - var(--span-w)) / 2));
+      background-position-y: calc(-1 * var(--row) * (var(--card-h) + var(--gap)));
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
+    }
+
+    .tile--anchor { background-color: var(--bg-card); border: 1px solid var(--border-strong); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5); transition: transform 850ms var(--ease-base), opacity 600ms var(--ease-base), border-color 400ms var(--ease-base); }
+    .tile--anchor.is-settled { border-color: rgba(245, 196, 81, 0.65); }
+
+    .card { position: relative; width: 100%; height: 100%; aspect-ratio: 63 / 88; border-radius: 6px; background-color: var(--bg-card); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .card-fallback { color: var(--text-muted); letter-spacing: 0.04em; user-select: none; }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Dashed warm crop guide overlay */
+    .crop-guide { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transform: translateZ(4px); transition: opacity 500ms var(--ease-base); }
+    .crop-guide.is-visible { opacity: 0.85; }
+
+    @media (max-width: 767px) {
+      :root { --card-w: 86px; }
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-bar { gap: 12px; padding: 8px 8px 8px 12px; }
+      .nav-links, .nav-cta { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero { padding: 96px 16px 32px; }
+      .visual-wrap { margin-top: 32px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tile, .tile--anchor, .crop-guide, .status-chip, .menu-line, .mobile-menu, .mobile-menu-item, .cta-primary, .cta-icon, .nav-link, .nav-cta { transition: opacity 300ms var(--ease-base); }
+      .tile, .tile--anchor { transform: translateZ(1px); opacity: 1; }
+      .tile--anchor { border-color: rgba(245, 196, 81, 0.55); }
+      .crop-guide { opacity: 0.55; }
+      .status-chip { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip-link title-4" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav-bar" aria-label="Primary navigation">
+      <a class="brand title-4" href="#top">
+        <svg class="brand-mark" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <circle cx="3" cy="3" r="1.4"/><circle cx="8" cy="3" r="1.4"/><circle cx="13" cy="3" r="1.4"/>
+          <circle cx="3" cy="8" r="1.4"/><circle cx="8" cy="8" r="1.6" fill="#F5C451"/><circle cx="13" cy="8" r="1.4"/>
+          <circle cx="3" cy="13" r="1.4"/><circle cx="8" cy="13" r="1.4"/><circle cx="13" cy="13" r="1.4"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a class="nav-link title-4" href="#features">Features</a></li>
+        <li><a class="nav-link title-4" href="#how-it-works">How it works</a></li>
+        <li><a class="nav-link title-4" href="#faq">FAQ</a></li>
+      </ul>
+
+      <a class="nav-cta button-sm" href="/planner">Open the planner</a>
+
+      <button class="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="menu-line menu-line--top" aria-hidden="true"></span>
+        <span class="menu-line menu-line--bottom" aria-hidden="true"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <a class="mobile-nav-link title-4 mobile-menu-item" href="#features">Features</a>
+    <a class="mobile-nav-link title-4 mobile-menu-item" href="#how-it-works">How it works</a>
+    <a class="mobile-nav-link title-4 mobile-menu-item" href="#faq">FAQ</a>
+    <a class="cta-primary button-md mobile-menu-item" href="/planner">
+      <span>Open the planner</span>
+      <svg class="cta-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+        <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/>
+      </svg>
+    </a>
+  </div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-copy">
+        <h1 class="heading-1 hero-title" id="hero-heading">
+          Plan Michi pages that<br>line up the first time
+        </h1>
+        <p class="body-3 hero-sub">
+          Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.
+        </p>
+        <div class="hero-actions">
+          <a class="cta-primary button-md" href="/planner">
+            <span>Open the planner</span>
+            <svg class="cta-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+              <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/>
+            </svg>
+          </a>
+          <p class="caption-5 hero-proof">Saved in your browser. Your art never leaves your device.</p>
+        </div>
+      </div>
+
+      <div class="visual-wrap" aria-hidden="true">
+        <div class="status-chip caption-4" id="status-chip">
+          <span class="status-dot"></span>
+          <span>Lines up across every pocket</span>
+        </div>
+
+        <div class="stage" id="stage">
+          <div class="binder-tilt" id="binder-tilt">
+            <div class="binder-page">
+              <div class="binder-grid" id="binder-grid">
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="0" style="--col:0;--row:0;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="1" style="--col:1;--row:0;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="2" style="--col:2;--row:0;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="7" style="--col:0;--row:1;"></div></div>
+                <div class="pocket">
+                  <div class="pocket-well"></div>
+                  <div class="tile tile--anchor" id="anchor-tile">
+                    <div class="card">
+                      <span class="caption-5 card-fallback">OP01-120</span>
+                      <img src="https://www.optcgapi.com/media/static/Card_Images/OP01-120.jpg" alt="Shanks secret rare anchor card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+                    </div>
+                  </div>
+                </div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="3" style="--col:2;--row:1;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="6" style="--col:0;--row:2;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="5" style="--col:1;--row:2;"></div></div>
+                <div class="pocket"><div class="pocket-well"></div><div class="tile tile--art" data-order="4" style="--col:2;--row:2;"></div></div>
+
+                <svg class="crop-guide" id="crop-guide" viewBox="0 0 340 469" preserveAspectRatio="none" fill="none">
+                  <rect x="0.5" y="0.5" width="339" height="468" rx="6" stroke="#F5C451" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                  <line x1="112" y1="0" x2="112" y2="469" stroke="#F5C451" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                  <line x1="228" y1="0" x2="228" y2="469" stroke="#F5C451" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                  <line x1="0" y1="155" x2="340" y2="155" stroke="#F5C451" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                  <line x1="0" y1="314" x2="340" y2="314" stroke="#F5C451" stroke-width="1" stroke-dasharray="4 4" vector-effect="non-scaling-stroke"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+      const toggle = document.querySelector('.menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      function setMenuOpen(open) {
+        toggle.setAttribute('aria-expanded', String(open));
+        mobileMenu.classList.toggle('is-open', open);
+        mobileMenu.setAttribute('aria-hidden', String(!open));
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+
+      toggle.addEventListener('click', () => setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+      mobileMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+          setMenuOpen(false);
+          toggle.focus();
+        }
+      });
+
+      if (reducedMotion) return;
+
+      const artTiles = Array.from(document.querySelectorAll('.tile--art'))
+        .sort((a, b) => Number(a.dataset.order) - Number(b.dataset.order));
+      const anchorTile = document.getElementById('anchor-tile');
+      const cropGuide = document.getElementById('crop-guide');
+      const statusChip = document.getElementById('status-chip');
+      const isMobile = () => window.matchMedia('(max-width: 767px)').matches;
+
+      const scatterPresets = [
+        { tx: -76, ty: -62, tz: 90, rx: 18, ry: -22, rz: -11, sc: 0.88 },
+        { tx: 10,  ty: -78, tz: 120, rx: 24, ry: 8,  rz: 6,   sc: 0.86 },
+        { tx: 82,  ty: -56, tz: 85, rx: 14, ry: 24,  rz: 12,  sc: 0.88 },
+        { tx: 88,  ty: 6,   tz: 110, rx: -6, ry: 26, rz: -7,  sc: 0.87 },
+        { tx: 78,  ty: 68,  tz: 95, rx: -20, ry: 20, rz: 10,  sc: 0.88 },
+        { tx: -8,  ty: 76,  tz: 115, rx: -24, ry: -8, rz: -6, sc: 0.86 },
+        { tx: -80, ty: 64,  tz: 90, rx: -18, ry: -24, rz: -12, sc: 0.88 },
+        { tx: -88, ty: -4,  tz: 105, rx: 8, ry: -26, rz: 8,   sc: 0.87 }
+      ];
+
+      function applyScatterVars() {
+        const s = isMobile() ? 0.5 : 1;
+        artTiles.forEach((tile, i) => {
+          const p = scatterPresets[i];
+          tile.style.setProperty('--tx', (p.tx * s) + 'px');
+          tile.style.setProperty('--ty', (p.ty * s) + 'px');
+          tile.style.setProperty('--tz', (p.tz * s) + 'px');
+          tile.style.setProperty('--rx', p.rx + 'deg');
+          tile.style.setProperty('--ry', p.ry + 'deg');
+          tile.style.setProperty('--rz', p.rz + 'deg');
+          tile.style.setProperty('--sc', String(p.sc));
+        });
+        anchorTile.style.setProperty('--tx', '0px');
+        anchorTile.style.setProperty('--ty', (-18 * s) + 'px');
+        anchorTile.style.setProperty('--tz', (140 * s) + 'px');
+        anchorTile.style.setProperty('--rx', '12deg');
+        anchorTile.style.setProperty('--ry', '0deg');
+        anchorTile.style.setProperty('--rz', '0deg');
+        anchorTile.style.setProperty('--sc', '1.08');
+      }
+
+      const timers = [];
+      const later = (ms, fn) => timers.push(window.setTimeout(fn, ms));
+      const clearTimers = () => { while (timers.length) window.clearTimeout(timers.pop()); };
+
+      function setScatteredInitial() {
+        applyScatterVars();
+        artTiles.forEach((tile) => {
+          tile.style.transitionDelay = '0ms';
+          tile.classList.remove('is-in');
+          tile.classList.add('is-scattered');
+        });
+        anchorTile.classList.remove('is-in', 'is-settled');
+        cropGuide.classList.remove('is-visible');
+        statusChip.classList.remove('is-visible');
+      }
+
+      function runCycle() {
+        clearTimers();
+        applyScatterVars();
+
+        artTiles.forEach((tile, i) => {
+          tile.style.transitionDelay = (i * 90) + 'ms';
+          tile.classList.remove('is-scattered');
+          tile.classList.add('is-in');
+        });
+
+        later(1080, () => anchorTile.classList.add('is-in'));
+        later(1850, () => anchorTile.classList.add('is-settled'));
+
+        later(2000, () => {
+          cropGuide.classList.add('is-visible');
+          statusChip.classList.add('is-visible');
+        });
+
+        later(5200, () => {
+          cropGuide.classList.remove('is-visible');
+          statusChip.classList.remove('is-visible');
+          anchorTile.classList.remove('is-settled');
+        });
+
+        later(5550, () => {
+          anchorTile.classList.remove('is-in');
+          artTiles.forEach((tile, i) => {
+            tile.style.transitionDelay = ((artTiles.length - 1 - i) * 60) + 'ms';
+            tile.classList.remove('is-in');
+            tile.classList.add('is-scattered');
+          });
+        });
+
+        later(9000, runCycle);
+      }
+
+      setScatteredInitial();
+      later(600, runCycle);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearTimers();
+        } else {
+          setScatteredInitial();
+          later(400, runCycle);
+        }
+      });
+
+      if (canHover) {
+        const tiltEl = document.getElementById('binder-tilt');
+        let targetRx = 4, targetRy = 0, currentRx = 4, currentRy = 0;
+
+        window.addEventListener('pointermove', (e) => {
+          const nx = (e.clientX / window.innerWidth) * 2 - 1;
+          const ny = (e.clientY / window.innerHeight) * 2 - 1;
+          targetRy = nx * 7;
+          targetRx = 4 - ny * 6;
+        }, { passive: true });
+
+        document.addEventListener('pointerleave', () => {
+          targetRx = 4;
+          targetRy = 0;
+        });
+
+        function tick() {
+          currentRx += (targetRx - currentRx) * 0.08;
+          currentRy += (targetRy - currentRy) * 0.08;
+          tiltEl.style.transform = 'rotateX(' + currentRx.toFixed(3) + 'deg) rotateY(' + currentRy.toFixed(3) + 'deg)';
+          window.requestAnimationFrame(tick);
+        }
+        window.requestAnimationFrame(tick);
+      }
+    })();
+  </script>
+</body>
+</html>

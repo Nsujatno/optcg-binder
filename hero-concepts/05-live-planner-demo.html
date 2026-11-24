@@ -1,0 +1,467 @@
+<!--
+  Concept 05 · Live planner demo · OPTCG Binder hero
+  Trend: Interactive miniature product UI window with scripted cursor choreography and subtle 3D perspective tilt.
+  Tests: Showing drag and drop, Michi art spanning, and AI slot matching directly inside the hero fold.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>05 · Live planner demo · OPTCG Binder hero</title>
+  <meta name="description" content="Plan One Piece TCG binder pages before you sleeve a card. Drag cards from every set, span custom Michi art across pockets, and get AI slot matches free in your browser.">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #1F1F1F;
+      --bg-frame: #181818;
+      --bg-surface: #272727;
+      --bg-stage: #131209;
+      --text-primary: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.64);
+      --text-subtle: rgba(255, 255, 255, 0.44);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --accent: #67E8F9;
+      --accent-soft: rgba(103, 232, 249, 0.12);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --g: 8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg-page); color: var(--text-primary); font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { min-height: 100svh; overflow-x: clip; }
+    a, button { font-family: inherit; color: inherit; text-decoration: none; }
+
+    /* Named text styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
+    .title-2 { font-size: 18px; line-height: 28px; font-weight: 500; text-wrap: pretty; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    /* Skip link and focus ring */
+    .skip-link { position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px; background: #FFFFFF; color: #000000; transform: translateY(-80px); opacity: 0; pointer-events: none; transition: transform 300ms var(--ease), opacity 300ms var(--ease); }
+    .skip-link:focus-visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Floating nav */
+    .site-header { position: fixed; top: 16px; left: 0; right: 0; z-index: 50; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+    .nav-bar { pointer-events: auto; display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 9999px; background: rgba(24, 24, 24, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border-subtle); }
+    .brand { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; border-radius: 8px; }
+    .brand-mark { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link { display: inline-flex; padding: 4px 12px; border-radius: 9999px; color: var(--text-muted); transition: color 300ms var(--ease), background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .nav-link:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.06); }
+    .nav-link:active { transform: scale(0.98); }
+    .btn-nav { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 9999px; background: #FFFFFF; color: #000000; white-space: nowrap; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .btn-nav:hover { background: rgba(255, 255, 255, 0.88); }
+    .btn-nav:active { transform: scale(0.98); }
+    .menu-toggle { display: none; width: 40px; height: 40px; padding: 0; border-radius: 9999px; background: transparent; border: 1px solid var(--border-subtle); cursor: pointer; align-items: center; justify-content: center; flex-direction: column; gap: 4px; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .menu-toggle:hover { background: rgba(255, 255, 255, 0.06); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .toggle-line { width: 16px; height: 2px; border-radius: 2px; background: var(--text-primary); transition: transform 500ms var(--ease); transform-origin: center; }
+    .menu-toggle[aria-expanded="true"] .toggle-line:first-child { transform: translateY(3px) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .toggle-line:last-child { transform: translateY(-3px) rotate(-45deg); }
+
+    /* Mobile full height menu */
+    .mobile-panel { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; gap: 24px; padding: 80px 24px 32px; background: rgba(31, 31, 31, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease); }
+    .mobile-panel.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-panel-item { opacity: 0; transform: translateY(24px); transition: opacity 340ms var(--ease), transform 340ms var(--ease); }
+    .mobile-panel.is-open .mobile-panel-item { opacity: 1; transform: translateY(0); }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(1) { transition-delay: 60ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(2) { transition-delay: 120ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(3) { transition-delay: 180ms; }
+    .mobile-panel.is-open .mobile-panel-item:nth-child(4) { transition-delay: 240ms; }
+    .mobile-link { display: inline-flex; padding: 8px 0; color: var(--text-primary); }
+
+    /* Hero */
+    .hero { min-height: 100svh; display: flex; align-items: center; overflow-x: clip; padding: 96px 32px 48px; }
+    .hero-inner { width: 100%; max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: center; gap: 48px; }
+    .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 24px; }
+    .hero-heading { max-width: 680px; background: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero-sub { max-width: 680px; color: var(--text-muted); }
+    .hero-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+    .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #FFFFFF; color: #000000; transition: background-color 300ms var(--ease), transform 300ms var(--ease); }
+    .btn-primary:hover { background: rgba(255, 255, 255, 0.88); transform: translateY(-2px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-icon { width: 16px; height: 16px; flex-shrink: 0; transition: transform 300ms var(--ease); }
+    .btn-primary:hover .btn-icon { transform: translateX(2px); }
+    .hero-proof { color: var(--text-subtle); }
+
+    /* Mini product window */
+    .stage-wrap { perspective: 1200px; width: 100%; }
+    .app-window { position: relative; width: 100%; padding: 8px; border-radius: 16px; background: var(--bg-frame); border: 1px solid var(--border-subtle); box-shadow: 0 32px 64px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.35); transform-style: preserve-3d; transform: rotateY(-8deg) rotateX(6deg); will-change: transform; }
+    .window-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 8px 12px; }
+    .window-dots { display: flex; align-items: center; gap: 8px; }
+    .win-dot { width: 8px; height: 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.16); }
+    .window-title { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .save-chip { display: inline-flex; align-items: center; gap: 8px; padding: 2px 8px; border-radius: 9999px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border-subtle); color: var(--text-muted); white-space: nowrap; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); flex-shrink: 0; }
+    .window-body { position: relative; display: flex; gap: 8px; align-items: stretch; transform-style: preserve-3d; }
+
+    /* Left tray */
+    .tray { width: 80px; flex-shrink: 0; padding: 8px; border-radius: 8px; background: var(--bg-page); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; }
+    .tray-label { color: var(--text-subtle); text-align: center; }
+    .tray-list { display: flex; flex-direction: column; gap: 8px; }
+    .tray-card { transition: opacity 300ms var(--ease), transform 300ms var(--ease); }
+    .tray-card.is-picked { opacity: 0.24; transform: scale(0.95); }
+
+    /* 3x3 Binder board */
+    .binder-board { flex: 1; min-width: 0; padding: 12px; border-radius: 8px; background: var(--bg-stage); border: 1px solid var(--border-subtle); position: relative; }
+    .binder-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--g); }
+    .pocket { position: relative; aspect-ratio: 63 / 88; border-radius: 6px; overflow: hidden; background: var(--bg-surface); }
+    .pocket-empty { background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-strong); transition: border-color 300ms var(--ease), background-color 300ms var(--ease); }
+    .pocket-empty.is-drop-target { border-color: var(--accent); background: var(--accent-soft); }
+    .pocket-empty.is-selected { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+
+    /* Cards and fallbacks */
+    .card { position: relative; width: 100%; aspect-ratio: 63 / 88; border-radius: 6px; overflow: hidden; background: var(--bg-surface); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .card-fallback { color: var(--text-subtle); text-align: center; padding: 4px; user-select: none; }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .placed-card { position: absolute; inset: 0; opacity: 0; transform: scale(0.92); transition: opacity 400ms var(--ease), transform 500ms var(--ease); }
+    .placed-card.is-visible { opacity: 1; transform: scale(1); }
+
+    /* Seamless 2x1 Michi span across pockets 1 and 2 */
+    .michi-slice-2x1 { position: absolute; top: 0; left: 0; width: calc(200% + var(--g)); height: 100%; max-width: none; object-fit: cover; object-position: 50% 45%; display: block; pointer-events: none; }
+    .michi-right .michi-slice-2x1 { left: calc(-100% - var(--g)); }
+
+    /* Slide out AI suggestion panel */
+    .ai-panel { position: absolute; top: 8px; right: 8px; width: min(216px, calc(100% - 16px)); z-index: 20; padding: 12px; border-radius: 8px; background: var(--bg-frame); border: 1px solid var(--border-strong); box-shadow: 0 16px 32px rgba(0, 0, 0, 0.55); display: flex; flex-direction: column; gap: 8px; opacity: 0; transform: translate3d(24px, 0, 12px) scale(0.98); pointer-events: none; transition: opacity 350ms var(--ease), transform 500ms var(--ease); }
+    .ai-panel.is-open { opacity: 1; transform: translate3d(0, 0, 12px) scale(1); }
+    .ai-header { display: flex; align-items: center; gap: 8px; color: var(--text-primary); }
+    .ai-list { display: flex; flex-direction: column; gap: 8px; }
+    .ai-item { display: flex; align-items: center; gap: 8px; padding: 4px; border-radius: 6px; background: var(--bg-page); border: 1px solid var(--border-subtle); transition: background-color 300ms var(--ease), border-color 300ms var(--ease), transform 300ms var(--ease); }
+    .ai-item.is-hovered { border-color: var(--accent); background: var(--accent-soft); }
+    .ai-item.is-clicked { transform: scale(0.98); }
+    .ai-thumb { width: 32px; flex-shrink: 0; }
+    .ai-meta { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .ai-name { color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ai-reason { color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Drag ghost and SVG cursor */
+    .drag-ghost { position: absolute; top: 0; left: 0; z-index: 30; pointer-events: none; opacity: 0; transform-origin: center; box-shadow: 0 24px 40px rgba(0, 0, 0, 0.6); transition: transform 650ms var(--ease), opacity 250ms var(--ease); will-change: transform, opacity; }
+    .drag-ghost.is-active { opacity: 1; }
+    .fake-cursor { position: absolute; top: 0; left: 0; width: 24px; height: 24px; z-index: 40; pointer-events: none; opacity: 0; transition: transform 650ms var(--ease), opacity 300ms var(--ease); will-change: transform, opacity; }
+    .fake-cursor.is-visible { opacity: 1; }
+    .cursor-svg { width: 24px; height: 24px; display: block; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)); transition: transform 220ms var(--ease); transform-origin: 4px 3px; }
+    .fake-cursor.is-clicking .cursor-svg { transform: scale(0.84); }
+
+    @media (max-width: 1023px) {
+      .hero { padding: 80px 16px 32px; align-items: flex-start; }
+      .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .app-window { transform: rotateY(-4deg) rotateX(4deg); }
+    }
+    @media (max-width: 767px) {
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-bar { width: 100%; justify-content: space-between; gap: 12px; }
+      .nav-links, .btn-nav { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero-copy { gap: 16px; }
+    }
+    @media (max-width: 639px) {
+      .tray { display: none; }
+      .app-window { transform: none; }
+      .binder-board { padding: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+      .app-window { transform: none !important; }
+      .tray-card.is-static-picked { opacity: 0.24; }
+      .placed-card { opacity: 1; transform: none; }
+      .pocket-static-selected { border-color: var(--accent); border-style: solid; background: var(--accent-soft); }
+      .ai-panel { opacity: 1; transform: none; }
+      .ai-item:first-child { border-color: var(--accent); background: var(--accent-soft); }
+      .fake-cursor, .drag-ghost { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link title-4" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav-bar" aria-label="Primary">
+      <a class="brand title-4" href="#">
+        <svg class="brand-mark" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <rect x="1" y="1" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="1" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="1" width="3.5" height="3.5" rx="0.8"/>
+          <rect x="1" y="6.25" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="6.25" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="6.25" width="3.5" height="3.5" rx="0.8"/>
+          <rect x="1" y="11.5" width="3.5" height="3.5" rx="0.8"/><rect x="6.25" y="11.5" width="3.5" height="3.5" rx="0.8"/><rect x="11.5" y="11.5" width="3.5" height="3.5" rx="0.8"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a class="nav-link title-4" href="#features">Features</a></li>
+        <li><a class="nav-link title-4" href="#how-it-works">How it works</a></li>
+        <li><a class="nav-link title-4" href="#faq">FAQ</a></li>
+      </ul>
+      <a class="btn-nav button-sm" href="/planner">Open the planner</a>
+      <button class="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div id="mobile-menu" class="mobile-panel" aria-hidden="true">
+    <a class="mobile-link mobile-panel-item title-2" href="#features">Features</a>
+    <a class="mobile-link mobile-panel-item title-2" href="#how-it-works">How it works</a>
+    <a class="mobile-link mobile-panel-item title-2" href="#faq">FAQ</a>
+    <div class="mobile-panel-item">
+      <a class="btn-primary button-md" href="/planner">
+        <span>Open the planner</span>
+        <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title" class="hero-heading heading-1">
+            See your binder page finished<br>before you sleeve a single card
+          </h1>
+          <p class="hero-sub title-2">
+            Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.
+          </p>
+          <div class="hero-actions">
+            <a class="btn-primary button-md" href="/planner">
+              <span>Open the planner</span>
+              <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+            </a>
+            <p class="hero-proof caption-5">Free · No account · Every One Piece set</p>
+          </div>
+        </div>
+
+        <div class="stage-wrap" aria-hidden="true">
+          <div id="app-window" class="app-window">
+            <div class="window-bar">
+              <div class="window-dots"><span class="win-dot"></span><span class="win-dot"></span><span class="win-dot"></span></div>
+              <span class="window-title caption-4">Character binder · Page 2</span>
+              <span class="save-chip caption-5"><span class="chip-dot"></span>Autosaved</span>
+            </div>
+
+            <div id="window-body" class="window-body">
+              <div class="tray">
+                <span class="tray-label caption-5">Tray</span>
+                <div class="tray-list">
+                  <div id="tray-card-0" class="card tray-card is-static-picked"><span class="card-fallback caption-5">OP01-025</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-025.jpg" alt="Roronoa Zoro card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                  <div class="card tray-card"><span class="card-fallback caption-5">OP06-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP06-001.jpg" alt="Uta leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                  <div class="card tray-card"><span class="card-fallback caption-5">OP07-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP07-001.jpg" alt="Monkey D. Dragon leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                  <div class="card tray-card"><span class="card-fallback caption-5">ST01-012</span><img src="https://www.optcgapi.com/media/static/Card_Images/ST01-012.jpg" alt="Monkey D. Luffy card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                </div>
+              </div>
+
+              <div class="binder-board">
+                <div class="binder-grid">
+                  <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP01-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-001.jpg" alt="Roronoa Zoro leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                  <div class="pocket michi-left"><img class="michi-slice-2x1" src="assets/michi-sunset.jpg" alt="" loading="eager" decoding="async"></div>
+                  <div class="pocket michi-right"><img class="michi-slice-2x1" src="assets/michi-sunset.jpg" alt="" loading="eager" decoding="async"></div>
+
+                  <div id="pocket-a" class="pocket pocket-empty"><div id="placed-a" class="card placed-card"><span class="card-fallback caption-5">OP01-025</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-025.jpg" alt="Roronoa Zoro card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                  <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP02-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP02-001.jpg" alt="Edward Newgate leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                  <div id="pocket-b" class="pocket pocket-empty pocket-static-selected"><div id="placed-b" class="card placed-card"><span class="card-fallback caption-5">OP08-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP08-001.jpg" alt="Tony Tony Chopper leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+
+                  <div class="pocket"><div class="card"><span class="card-fallback caption-5">ST01-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/ST01-001.jpg" alt="Monkey D. Luffy leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                  <div class="pocket"><div class="card"><span class="card-fallback caption-5">OP05-001</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP05-001.jpg" alt="Sabo leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div></div>
+                  <div class="pocket pocket-empty"></div>
+                </div>
+              </div>
+
+              <div id="ai-panel" class="ai-panel">
+                <div class="ai-header caption-4"><span class="chip-dot"></span><span>What matches here?</span></div>
+                <div class="ai-list">
+                  <div id="ai-item-0" class="ai-item">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">OP08</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP08-001.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Tony Tony Chopper</span><span class="ai-reason caption-5">Same color · Green</span></div>
+                  </div>
+                  <div class="ai-item">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">OP01</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP01-120.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Shanks</span><span class="ai-reason caption-5">Same set · Romance Dawn</span></div>
+                  </div>
+                  <div class="ai-item">
+                    <div class="card ai-thumb"><span class="card-fallback caption-5">OP03</span><img src="https://www.optcgapi.com/media/static/Card_Images/OP03-001.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()"></div>
+                    <div class="ai-meta"><span class="ai-name caption-4">Portgas D. Ace</span><span class="ai-reason caption-5">Same color · Red</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="drag-ghost" class="card drag-ghost">
+                <span class="card-fallback caption-5">OP01-025</span>
+                <img src="https://www.optcgapi.com/media/static/Card_Images/OP01-025.jpg" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+              </div>
+
+              <div id="fake-cursor" class="fake-cursor">
+                <svg class="cursor-svg" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4.5 3.5L19 11.2L12.6 13.1L10.3 19.5L4.5 3.5Z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.menu-toggle');
+      const panel = document.getElementById('mobile-menu');
+      if (toggle && panel) {
+        const setOpen = (open) => {
+          toggle.setAttribute('aria-expanded', String(open));
+          panel.setAttribute('aria-hidden', String(!open));
+          panel.classList.toggle('is-open', open);
+        };
+        toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+        panel.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+      }
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canHover = window.matchMedia('(hover: hover)').matches;
+      const win = document.getElementById('app-window');
+
+      if (!reduced && canHover && win) {
+        const baseY = -8, baseX = 6;
+        let targetY = baseY, targetX = baseX, curY = baseY, curX = baseX, rafId = 0;
+        const tick = () => {
+          curY += (targetY - curY) * 0.08;
+          curX += (targetX - curX) * 0.08;
+          win.style.transform = `rotateY(${curY.toFixed(2)}deg) rotateX(${curX.toFixed(2)}deg)`;
+          if (Math.abs(targetY - curY) > 0.03 || Math.abs(targetX - curX) > 0.03) rafId = requestAnimationFrame(tick);
+          else rafId = 0;
+        };
+        const start = () => { if (!rafId) rafId = requestAnimationFrame(tick); };
+        window.addEventListener('pointermove', (e) => {
+          targetY = baseY + (e.clientX / window.innerWidth - 0.5) * 8;
+          targetX = baseX - (e.clientY / window.innerHeight - 0.5) * 6;
+          start();
+        }, { passive: true });
+        document.addEventListener('pointerleave', () => { targetY = baseY; targetX = baseX; start(); });
+      }
+
+      if (reduced) return;
+
+      const bodyEl = document.getElementById('window-body');
+      const trayCard = document.getElementById('tray-card-0');
+      const pocketA = document.getElementById('pocket-a');
+      const placedA = document.getElementById('placed-a');
+      const pocketB = document.getElementById('pocket-b');
+      const placedB = document.getElementById('placed-b');
+      const aiPanel = document.getElementById('ai-panel');
+      const aiItem0 = document.getElementById('ai-item-0');
+      const ghost = document.getElementById('drag-ghost');
+      const cursor = document.getElementById('fake-cursor');
+
+      const getLocalRect = (el) => {
+        let x = 0, y = 0, cur = el;
+        while (cur && cur !== bodyEl) { x += cur.offsetLeft; y += cur.offsetTop; cur = cur.offsetParent; }
+        return { x, y, w: el.offsetWidth, h: el.offsetHeight };
+      };
+      const moveCursor = (x, y) => { cursor.style.transform = `translate3d(${x}px, ${y}px, 40px)`; };
+      const pulseClick = () => { cursor.classList.add('is-clicking'); setTimeout(() => cursor.classList.remove('is-clicking'), 220); };
+
+      let timers = [];
+      const after = (ms, fn) => { timers.push(setTimeout(fn, ms)); };
+
+      const runCycle = () => {
+        timers.forEach(clearTimeout);
+        timers = [];
+
+        const rectA = getLocalRect(pocketA);
+        const rectB = getLocalRect(pocketB);
+        const hasTray = trayCard.offsetWidth > 0;
+        const rectTray = hasTray
+          ? getLocalRect(trayCard)
+          : { x: Math.max(8, rectA.x - 16), y: Math.max(8, rectA.y - 24), w: rectA.w * 0.72, h: rectA.h * 0.72 };
+        const startX = rectTray.x + (rectTray.w - rectA.w) / 2;
+        const startY = rectTray.y + (rectTray.h - rectA.h) / 2;
+        const startScale = (rectTray.w / rectA.w).toFixed(3);
+
+        trayCard.classList.remove('is-picked');
+        placedA.classList.remove('is-visible');
+        placedB.classList.remove('is-visible');
+        pocketA.classList.remove('is-drop-target');
+        pocketB.classList.remove('is-selected');
+        aiPanel.classList.remove('is-open');
+        aiItem0.classList.remove('is-hovered', 'is-clicked');
+        ghost.classList.remove('is-active');
+        ghost.style.width = `${rectA.w}px`;
+        ghost.style.transition = 'none';
+        ghost.style.transform = `translate3d(${startX}px, ${startY}px, 0) scale(${startScale})`;
+
+        cursor.classList.add('is-visible');
+        moveCursor(rectTray.x + rectTray.w * 0.5 + 32, rectTray.y + rectTray.h * 0.5 + 32);
+
+        after(450, () => moveCursor(rectTray.x + rectTray.w * 0.55, rectTray.y + rectTray.h * 0.52));
+
+        after(1150, () => {
+          pulseClick();
+          trayCard.classList.add('is-picked');
+          pocketA.classList.add('is-drop-target');
+          ghost.style.transition = '';
+          ghost.classList.add('is-active');
+          ghost.style.transform = `translate3d(${startX + 8}px, ${startY - 12}px, 28px) scale(0.92) rotateZ(-5deg) rotateY(10deg)`;
+        });
+
+        after(1550, () => {
+          moveCursor(rectA.x + rectA.w * 0.52, rectA.y + rectA.h * 0.52);
+          ghost.style.transform = `translate3d(${rectA.x}px, ${rectA.y - 6}px, 24px) scale(1.04) rotateZ(4deg) rotateY(-10deg)`;
+        });
+
+        after(2250, () => {
+          ghost.style.transform = `translate3d(${rectA.x}px, ${rectA.y}px, 0) scale(1) rotateZ(0deg) rotateY(0deg)`;
+        });
+
+        after(2550, () => {
+          placedA.classList.add('is-visible');
+          ghost.classList.remove('is-active');
+          pocketA.classList.remove('is-drop-target');
+        });
+
+        after(3100, () => moveCursor(rectB.x + rectB.w * 0.52, rectB.y + rectB.h * 0.52));
+
+        after(3850, () => {
+          pulseClick();
+          pocketB.classList.add('is-selected');
+          aiPanel.classList.add('is-open');
+        });
+
+        after(4600, () => {
+          const rectSug = getLocalRect(aiItem0);
+          moveCursor(rectSug.x + rectSug.w * 0.62, rectSug.y + rectSug.h * 0.55);
+        });
+
+        after(5300, () => aiItem0.classList.add('is-hovered'));
+
+        after(5600, () => {
+          pulseClick();
+          aiItem0.classList.add('is-clicked');
+          placedB.classList.add('is-visible');
+        });
+
+        after(6100, () => {
+          aiItem0.classList.remove('is-clicked');
+          aiPanel.classList.remove('is-open');
+          pocketB.classList.remove('is-selected');
+        });
+
+        after(8100, () => {
+          cursor.classList.remove('is-visible');
+          placedA.classList.remove('is-visible');
+          placedB.classList.remove('is-visible');
+          trayCard.classList.remove('is-picked');
+        });
+
+        after(8800, runCycle);
+      };
+
+      runCycle();
+    })();
+  </script>
+</body>
+</html>

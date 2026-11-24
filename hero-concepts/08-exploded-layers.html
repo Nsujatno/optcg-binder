@@ -1,0 +1,488 @@
+<!--
+  Concept 08 · Exploded layers
+  Trend: Architectural isometric 3D layer breakdown with periodic collapse and depth parallax
+  Tests: Whether separating page, custom art span, cards, and tools along Z explains the Michi workflow instantly
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>08 · Exploded layers · OPTCG Binder hero</title>
+  <meta name="description" content="Plan every One Piece Card Game binder pocket before printing with layered custom art spans and browser based export.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23181818'/%3E%3Cg fill='%2367E8F9'%3E%3Ccircle cx='7' cy='7' r='1.7'/%3E%3Ccircle cx='12' cy='7' r='1.7'/%3E%3Ccircle cx='17' cy='7' r='1.7'/%3E%3Ccircle cx='7' cy='12' r='1.7'/%3E%3Ccircle cx='12' cy='12' r='1.7'/%3E%3Ccircle cx='17' cy='12' r='1.7'/%3E%3Ccircle cx='7' cy='17' r='1.7'/%3E%3Ccircle cx='12' cy='17' r='1.7'/%3E%3Ccircle cx='17' cy='17' r='1.7'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #181818;
+      --surface-1: #1F1F1F;
+      --surface-2: #272727;
+      --text: #FFFFFF;
+      --text-muted: rgba(255, 255, 255, 0.68);
+      --text-subtle: rgba(255, 255, 255, 0.48);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --accent: #67E8F9;
+      --curve: cubic-bezier(0.22, 1, 0.36, 1);
+
+      /* Isometric 3x3 page sizing (63:88 real card ratio) and 3x2 Michi storm span (michi-storm.jpg is 896x1200) */
+      --pw: 88px;
+      --ph: calc(var(--pw) * 88 / 63);
+      --gap: 8px;
+      --pad: 12px;
+      --card-r: 6px;
+      --page-r: 16px;
+      --span-w: calc(var(--pw) * 3 + var(--gap) * 2);
+      --span-h: calc(var(--ph) * 2 + var(--gap));
+      --art-h: calc(var(--span-w) * 1200 / 896);
+      --art-oy: calc((var(--span-h) - var(--art-h)) / 2);
+
+      /* Z separation for 4 stacked layers */
+      --z1: 0px; --z2: 52px; --z3: 104px; --z4: 156px;
+      --stem-h: 48px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: 'Geist', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+
+    /* Named typography styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
+    .title-2 { font-size: 18px; line-height: 28px; font-weight: 500; text-wrap: pretty; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    /* Accessibility focus + skip link */
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .skip-link {
+      position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px;
+      background: #FFFFFF; color: #000000; text-decoration: none;
+      transform: translateY(-96px); transition: transform 300ms var(--curve);
+    }
+    .skip-link:focus-visible { transform: translateY(0); }
+
+    /* Floating navigation */
+    .nav-shell { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100vw - 32px); }
+    .nav-bar {
+      display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 16px;
+      background: rgba(24, 24, 24, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; border-radius: 6px; white-space: nowrap; }
+    .brand-mark { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 16px; list-style: none; margin: 0; padding: 0; }
+    .nav-link {
+      display: inline-block; color: var(--text-muted); text-decoration: none; padding: 4px 8px; border-radius: 6px;
+      transition: color 300ms var(--curve), background-color 300ms var(--curve), transform 300ms var(--curve);
+    }
+    .nav-link:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
+    .nav-link:active { transform: scale(0.98); }
+    .btn-nav {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+      background: #FFFFFF; color: #000000; text-decoration: none; white-space: nowrap;
+      transition: background-color 300ms var(--curve), transform 300ms var(--curve);
+    }
+    .btn-nav:hover { background: rgba(255, 255, 255, 0.88); }
+    .btn-nav:active { transform: scale(0.98); }
+
+    /* Mobile menu toggle + full height panel */
+    .menu-toggle {
+      display: none; position: relative; width: 40px; height: 40px; padding: 0;
+      border: 1px solid var(--border); border-radius: 8px; background: rgba(255, 255, 255, 0.04);
+      color: var(--text); cursor: pointer; align-items: center; justify-content: center;
+      transition: background-color 300ms var(--curve), transform 300ms var(--curve);
+    }
+    .menu-toggle:hover { background: rgba(255, 255, 255, 0.1); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .menu-toggle span {
+      position: absolute; width: 16px; height: 2px; border-radius: 9999px; background: currentColor;
+      transition: transform 500ms var(--curve);
+    }
+    .menu-toggle span:first-child { transform: translateY(-4px); }
+    .menu-toggle span:last-child { transform: translateY(4px); }
+    .menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(0) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(0) rotate(-45deg); }
+
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center;
+      padding: 96px 24px 48px; background: rgba(24, 24, 24, 0.92);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 300ms var(--curve), visibility 300ms var(--curve);
+    }
+    .mobile-menu.is-open { opacity: 1; visibility: visible; pointer-events: auto; }
+    .mobile-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 24px; }
+    .mobile-menu-item { opacity: 0; transform: translateY(24px); transition: opacity 220ms var(--curve), transform 220ms var(--curve); }
+    .mobile-menu.is-open .mobile-menu-item { opacity: 1; transform: translateY(0); }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(1) { transition-delay: 0ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(2) { transition-delay: 60ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(3) { transition-delay: 120ms; }
+    .mobile-menu.is-open .mobile-menu-item:nth-child(4) { transition-delay: 180ms; }
+    .mobile-nav-link { color: var(--text); text-decoration: none; display: inline-block; padding: 4px 0; }
+
+    /* Split hero */
+    .hero { min-height: 100svh; display: flex; align-items: center; padding: 96px 32px 64px; overflow-x: clip; }
+    .hero-inner {
+      width: 100%; max-width: 1248px; margin: 0 auto;
+      display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 48px; align-items: center;
+    }
+    .hero-copy { display: flex; flex-direction: column; align-items: flex-start; }
+    .hero-heading {
+      margin: 0; max-width: 680px;
+      background: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { margin: 24px 0 0; max-width: 680px; color: var(--text-muted); }
+    .hero-actions { margin-top: 32px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+      background: #FFFFFF; color: #000000; text-decoration: none;
+      transition: background-color 300ms var(--curve), transform 300ms var(--curve);
+    }
+    .btn-primary:hover { background: rgba(255, 255, 255, 0.88); transform: translateY(-1px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary svg { width: 16px; height: 16px; transition: transform 300ms var(--curve); }
+    .btn-primary:hover svg { transform: translateX(2px); }
+    .hero-proof { margin: 0; color: var(--text-subtle); }
+
+    /* Isometric exploded stage */
+    .iso-stage {
+      position: relative; display: flex; align-items: center; justify-content: center;
+      min-height: 480px; padding-top: 64px; padding-left: 32px; perspective: 1500px;
+      opacity: 0; transform: translateY(24px); animation: visualEnter 700ms var(--curve) forwards;
+    }
+    @keyframes visualEnter { to { opacity: 1; transform: translateY(0); } }
+    .iso-stack {
+      position: relative;
+      width: calc(var(--pw) * 3 + var(--gap) * 2 + var(--pad) * 2);
+      height: calc(var(--ph) * 3 + var(--gap) * 2 + var(--pad) * 2);
+      transform-style: preserve-3d; transform: rotateX(55deg) rotateZ(-40deg);
+    }
+
+    /* Outer Z collapse transition + inner rAF parallax wrapper */
+    .layer-z {
+      position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform, opacity;
+      transition: transform 1200ms var(--curve), opacity 1200ms var(--curve);
+    }
+    .layer-1 { transform: translateZ(var(--z1)); }
+    .layer-2 { transform: translateZ(var(--z2)); }
+    .layer-3 { transform: translateZ(var(--z3)); }
+    .layer-4 { transform: translateZ(var(--z4)); }
+    .iso-stack.is-collapsed .layer-1 { transform: translateZ(0px); }
+    .iso-stack.is-collapsed .layer-2 { transform: translateZ(1px); }
+    .iso-stack.is-collapsed .layer-3 { transform: translateZ(1px); }
+    .iso-stack.is-collapsed .layer-4 { transform: translateZ(0px); opacity: 0; }
+    .iso-stack.is-collapsed .layer-label, .iso-stack.is-collapsed .art-frame { opacity: 0; }
+
+    .layer-parallax { position: relative; width: 100%; height: 100%; padding: var(--pad); border-radius: var(--page-r); transform-style: preserve-3d; }
+
+    /* Upright billboarded left edge labels (exact inverse of rotateX(55) rotateZ(-40)) */
+    .layer-label {
+      position: absolute; right: calc(100% + 16px); top: 12px; display: inline-flex; align-items: center; gap: 8px;
+      color: var(--text-subtle); white-space: nowrap; pointer-events: none;
+      transform-origin: right center; transform: rotateZ(40deg) rotateX(-55deg);
+      transition: opacity 600ms var(--curve);
+    }
+    .layer-tick { width: 12px; height: 1px; background: rgba(255, 255, 255, 0.22); flex-shrink: 0; }
+
+    .grid-3x3 {
+      display: grid; grid-template-columns: repeat(3, var(--pw)); grid-template-rows: repeat(3, var(--ph));
+      gap: var(--gap); transform-style: preserve-3d;
+    }
+
+    /* Layer 1: page surface + empty pocket outlines */
+    .page-surface { background: var(--surface-2); border: 1px solid var(--border); box-shadow: 0 32px 64px rgba(0, 0, 0, 0.62); }
+    .pocket-outline { width: var(--pw); height: var(--ph); border-radius: var(--card-r); background: var(--surface-1); border: 1px solid var(--border); }
+
+    /* Layer 2: 3x2 Michi storm art across top 6 pockets */
+    .art-frame {
+      position: absolute; top: var(--pad); left: var(--pad); width: var(--span-w); height: var(--span-h);
+      border-radius: var(--card-r); border: 1px dashed rgba(103, 232, 249, 0.32); pointer-events: none;
+      transform: translateZ(-2px); transition: opacity 800ms var(--curve);
+    }
+    .michi-tile {
+      width: var(--pw); height: var(--ph); border-radius: var(--card-r);
+      background-color: var(--surface-2); background-image: url("assets/michi-storm.jpg");
+      background-repeat: no-repeat; background-origin: border-box; background-size: var(--span-w) var(--art-h);
+      background-position:
+        calc(-1 * var(--col) * (var(--pw) + var(--gap)))
+        calc(var(--art-oy) - var(--row) * (var(--ph) + var(--gap)));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), 0 12px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Layer 3: Real cards in bottom row */
+    .slot-empty { width: var(--pw); height: var(--ph); visibility: hidden; }
+    .card {
+      position: relative; width: var(--pw); height: var(--ph); aspect-ratio: 63 / 88; border-radius: var(--card-r);
+      background: var(--surface-2); border: 1px solid var(--border-strong);
+      display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 32px rgba(0, 0, 0, 0.55);
+    }
+    .card-fallback { color: var(--text-subtle); user-select: none; }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: var(--card-r); display: block; }
+
+    /* Layer 4: Floating UI chips with 3D vertical connector stems */
+    .tools-layer { pointer-events: none; }
+    .chip-pin { position: absolute; transform-style: preserve-3d; }
+    .pin-crop { left: 18%; top: 14%; }
+    .pin-zoom { left: 82%; top: 20%; }
+    .pin-span { left: 24%; top: 56%; }
+    .pin-export { left: 84%; top: 86%; }
+    .pin-stem {
+      position: absolute; left: 0; top: 0; width: 2px; height: var(--stem-h);
+      background: rgba(103, 232, 249, 0.45); transform-origin: top center; transform: rotateX(-90deg);
+    }
+    .pin-dot { position: absolute; left: -2px; bottom: -2px; width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); }
+    .tool-chip {
+      position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 8px;
+      padding: 4px 12px; border-radius: 9999px; background: var(--surface-1); border: 1px solid var(--border-strong);
+      color: var(--text); white-space: nowrap; box-shadow: 0 12px 24px rgba(0, 0, 0, 0.55);
+      transform-origin: left top; transform: rotateZ(40deg) rotateX(-55deg) translate(-50%, -100%);
+    }
+    .chip-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); flex-shrink: 0; }
+
+    @media (max-width: 1120px) {
+      .heading-1 { font-size: 48px; line-height: 48px; }
+      :root { --pw: 76px; --z2: 44px; --z3: 88px; --z4: 132px; --stem-h: 40px; }
+      .iso-stage { min-height: 420px; }
+    }
+    @media (max-width: 920px) {
+      .hero { padding: 80px 24px 48px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+      .iso-stage { min-height: 360px; padding-top: 48px; padding-left: 32px; }
+    }
+    @media (max-width: 767px) {
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .hero-sub { font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 16px; }
+      .nav-shell { width: calc(100vw - 32px); }
+      .nav-bar { justify-content: space-between; gap: 12px; padding: 8px 8px 8px 16px; }
+      .nav-links, .btn-nav { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero { padding: 80px 16px 40px; }
+      .hero-actions { margin-top: 24px; gap: 12px; }
+      :root { --pw: 48px; --gap: 4px; --pad: 8px; --page-r: 12px; --z2: 34px; --z3: 68px; --z4: 102px; --stem-h: 28px; }
+      .iso-stage { min-height: 300px; padding-top: 48px; padding-left: 48px; }
+      .layer-label { right: calc(100% + 8px); gap: 4px; }
+      .layer-tick { width: 8px; }
+      .tool-chip { padding: 4px 8px; gap: 4px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .iso-stage { animation: none; opacity: 1; transform: none; }
+      .layer-z, .layer-label, .art-frame, .btn-primary, .btn-primary svg, .menu-toggle span, .mobile-menu, .mobile-menu-item {
+        transition-duration: 0.01ms !important; transition-delay: 0ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link button-sm">Skip to content</a>
+
+  <header class="nav-shell">
+    <nav class="nav-bar" aria-label="Primary">
+      <a href="#main" class="brand title-4">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="5" cy="5" r="2.2"/><circle cx="12" cy="5" r="2.2"/><circle cx="19" cy="5" r="2.2"/>
+          <circle cx="5" cy="12" r="2.2"/><circle cx="12" cy="12" r="2.2"/><circle cx="19" cy="12" r="2.2"/>
+          <circle cx="5" cy="19" r="2.2"/><circle cx="12" cy="19" r="2.2"/><circle cx="19" cy="19" r="2.2"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link title-4">Features</a></li>
+        <li><a href="#how-it-works" class="nav-link title-4">How it works</a></li>
+        <li><a href="#faq" class="nav-link title-4">FAQ</a></li>
+      </ul>
+      <a href="/planner" class="btn-nav button-sm">Open the planner</a>
+      <button type="button" class="menu-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span>
+      </button>
+    </nav>
+  </header>
+
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul class="mobile-menu-list">
+      <li class="mobile-menu-item"><a href="#features" class="mobile-nav-link title-2">Features</a></li>
+      <li class="mobile-menu-item"><a href="#how-it-works" class="mobile-nav-link title-2">How it works</a></li>
+      <li class="mobile-menu-item"><a href="#faq" class="mobile-nav-link title-2">FAQ</a></li>
+      <li class="mobile-menu-item">
+        <a href="/planner" class="btn-primary button-md">
+          <span>Open the planner</span>
+          <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1 id="hero-title" class="hero-heading heading-1">
+            Every pocket planned<br>before a single print
+          </h1>
+          <p class="hero-sub title-2">
+            Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.
+          </p>
+          <div class="hero-actions">
+            <a href="/planner" class="btn-primary button-md">
+              <span>Plan your first page</span>
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+            </a>
+            <p class="hero-proof caption-5">Saved in your browser. Your art never leaves your device.</p>
+          </div>
+        </div>
+
+        <div class="iso-stage" aria-hidden="true">
+          <div class="iso-stack" id="iso-stack">
+            <div class="layer-z layer-1">
+              <div class="layer-parallax page-surface" data-depth="0.25">
+                <span class="layer-label caption-5"><span>Page</span><span class="layer-tick"></span></span>
+                <div class="grid-3x3">
+                  <div class="pocket-outline"></div><div class="pocket-outline"></div><div class="pocket-outline"></div>
+                  <div class="pocket-outline"></div><div class="pocket-outline"></div><div class="pocket-outline"></div>
+                  <div class="pocket-outline"></div><div class="pocket-outline"></div><div class="pocket-outline"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="layer-z layer-2">
+              <div class="layer-parallax" data-depth="0.6">
+                <span class="layer-label caption-5"><span>Your art</span><span class="layer-tick"></span></span>
+                <div class="art-frame"></div>
+                <div class="grid-3x3">
+                  <div class="michi-tile" style="--col:0; --row:0;"></div>
+                  <div class="michi-tile" style="--col:1; --row:0;"></div>
+                  <div class="michi-tile" style="--col:2; --row:0;"></div>
+                  <div class="michi-tile" style="--col:0; --row:1;"></div>
+                  <div class="michi-tile" style="--col:1; --row:1;"></div>
+                  <div class="michi-tile" style="--col:2; --row:1;"></div>
+                  <div class="slot-empty"></div><div class="slot-empty"></div><div class="slot-empty"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="layer-z layer-3">
+              <div class="layer-parallax" data-depth="1.0">
+                <span class="layer-label caption-5"><span>Cards</span><span class="layer-tick"></span></span>
+                <div class="grid-3x3">
+                  <div class="slot-empty"></div><div class="slot-empty"></div><div class="slot-empty"></div>
+                  <div class="slot-empty"></div><div class="slot-empty"></div><div class="slot-empty"></div>
+                  <div class="card">
+                    <span class="card-fallback caption-5">OP02-001</span>
+                    <img src="https://www.optcgapi.com/media/static/Card_Images/OP02-001.jpg" alt="Edward Newgate leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+                  </div>
+                  <div class="card">
+                    <span class="card-fallback caption-5">OP03-040</span>
+                    <img src="https://www.optcgapi.com/media/static/Card_Images/OP03-040.jpg" alt="Nami leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+                  </div>
+                  <div class="card">
+                    <span class="card-fallback caption-5">OP05-060</span>
+                    <img src="https://www.optcgapi.com/media/static/Card_Images/OP05-060.jpg" alt="Monkey D. Luffy leader card" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="layer-z layer-4">
+              <div class="layer-parallax tools-layer" data-depth="1.45">
+                <span class="layer-label caption-5"><span>Tools</span><span class="layer-tick"></span></span>
+                <div class="chip-pin pin-crop"><span class="pin-stem"><span class="pin-dot"></span></span><span class="tool-chip caption-4"><span class="chip-dot"></span><span>Crop · Fill</span></span></div>
+                <div class="chip-pin pin-zoom"><span class="pin-stem"><span class="pin-dot"></span></span><span class="tool-chip caption-4"><span class="chip-dot"></span><span>Zoom 118%</span></span></div>
+                <div class="chip-pin pin-span"><span class="pin-stem"><span class="pin-dot"></span></span><span class="tool-chip caption-4"><span class="chip-dot"></span><span>2x2 span</span></span></div>
+                <div class="chip-pin pin-export"><span class="pin-stem"><span class="pin-dot"></span></span><span class="tool-chip caption-4"><span class="chip-dot"></span><span>Export PNG</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.menu-toggle');
+      const menu = document.getElementById('mobile-menu');
+      const setMenu = (open) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        menu.setAttribute('aria-hidden', String(!open));
+        menu.classList.toggle('is-open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+      toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+      menu.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setMenu(false)));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') { setMenu(false); toggle.focus(); }
+      });
+
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const stack = document.getElementById('iso-stack');
+      const hero = document.querySelector('.hero');
+      const layers = Array.from(document.querySelectorAll('.layer-parallax')).map((el) => ({
+        el, depth: parseFloat(el.dataset.depth || '0'), x: 0, y: 0
+      }));
+      if (reduced || !stack) return;
+
+      let collapsed = false;
+      let timerId = 0;
+      let targetX = 0;
+      let targetY = 0;
+      let rafId = 0;
+
+      const tickParallax = () => {
+        let moving = false;
+        for (const item of layers) {
+          const tx = collapsed ? 0 : targetX * item.depth;
+          const ty = collapsed ? 0 : targetY * item.depth;
+          item.x += (tx - item.x) * 0.08;
+          item.y += (ty - item.y) * 0.08;
+          if (Math.abs(tx - item.x) > 0.02 || Math.abs(ty - item.y) > 0.02) {
+            moving = true;
+          } else {
+            item.x = tx;
+            item.y = ty;
+          }
+          item.el.style.transform = `translate3d(${item.x.toFixed(2)}px, ${item.y.toFixed(2)}px, 0)`;
+        }
+        rafId = moving ? requestAnimationFrame(tickParallax) : 0;
+      };
+      const kickParallax = () => { if (!rafId) rafId = requestAnimationFrame(tickParallax); };
+
+      const scheduleCycle = () => {
+        clearTimeout(timerId);
+        const delay = collapsed ? 3200 : 5000;
+        timerId = window.setTimeout(() => {
+          collapsed = !collapsed;
+          stack.classList.toggle('is-collapsed', collapsed);
+          if (collapsed) { targetX = 0; targetY = 0; kickParallax(); }
+          scheduleCycle();
+        }, delay);
+      };
+      scheduleCycle();
+
+      document.addEventListener('visibilitychange', () => {
+        clearTimeout(timerId);
+        if (!document.hidden) scheduleCycle();
+      });
+
+      if (canHover && hero) {
+        hero.addEventListener('pointermove', (e) => {
+          if (collapsed) return;
+          const rect = hero.getBoundingClientRect();
+          const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+          const ny = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+          targetX = nx * 14;
+          targetY = ny * 10;
+          kickParallax();
+        });
+        hero.addEventListener('pointerleave', () => { targetX = 0; targetY = 0; kickParallax(); });
+      }
+    })();
+  </script>
+</body>
+</html>

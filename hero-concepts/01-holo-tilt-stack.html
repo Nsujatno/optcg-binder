@@ -1,0 +1,382 @@
+<!-- Concept 01 · Holo tilt stack · Trend: 3D holographic trading card fan with cursor parallax · Tests: physical collector appeal and depth using three large fanned cards below centered copy -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plan your One Piece Card Game binder pages in the browser. Drag cards from every set, span custom art across pockets, and export clean layouts for free.">
+  <title>01 · Holo tilt stack · OPTCG Binder hero</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Crect x='4' y='4' width='4' height='4' rx='1'/%3E%3Crect x='10' y='4' width='4' height='4' rx='1'/%3E%3Crect x='16' y='4' width='4' height='4' rx='1'/%3E%3Crect x='4' y='10' width='4' height='4' rx='1'/%3E%3Crect x='10' y='10' width='4' height='4' rx='1' fill='%2367E8F9'/%3E%3Crect x='16' y='10' width='4' height='4' rx='1'/%3E%3Crect x='4' y='16' width='4' height='4' rx='1'/%3E%3Crect x='10' y='16' width='4' height='4' rx='1'/%3E%3Crect x='16' y='16' width='4' height='4' rx='1'/%3E%3C/g%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000; --surface: #181818; --surface-card: #272727;
+      --text: #FFFFFF; --text-muted: #A1A1AA; --text-subtle: #71717A;
+      --accent: #67E8F9; --border: rgba(255, 255, 255, 0.08); --border-card: rgba(255, 255, 255, 0.14);
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --card-w: 232px; --card-h: 324px; --card-r: 12px;
+      --tx-left: -148px; --tx-right: 148px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: 'Geist', system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    body { background: var(--bg); color: var(--text); min-height: 100svh; overflow-x: clip; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Named text styles */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+    .heading-5 { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    .skip-link {
+      position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px;
+      background: var(--text); color: var(--bg); transform: translateY(-96px); opacity: 0;
+      transition: transform 300ms var(--ease), opacity 300ms var(--ease);
+    }
+    .skip-link:focus { transform: translateY(0); opacity: 1; }
+
+    /* Floating navigation */
+    .nav-wrap { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50; width: max-content; max-width: calc(100vw - 32px); }
+    .nav-bar {
+      display: flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px; border-radius: 9999px;
+      background: rgba(24, 24, 24, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; white-space: nowrap; transition: opacity 300ms var(--ease); }
+    .brand:hover { opacity: 0.84; }
+    .brand-mark { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link {
+      display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 9999px;
+      color: var(--text-muted); white-space: nowrap;
+      transition: color 300ms var(--ease), background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .nav-link:hover { color: var(--text); background-color: rgba(255, 255, 255, 0.06); }
+    .nav-link:active { transform: scale(0.98); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 9999px;
+      background: var(--text); color: var(--bg); white-space: nowrap;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .nav-cta:hover { background: #E4E4E7; }
+    .nav-cta:active { transform: scale(0.98); }
+
+    .menu-toggle {
+      display: none; position: relative; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 9999px;
+      background: transparent; color: var(--text); cursor: pointer; align-items: center; justify-content: center;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .menu-toggle:hover { background-color: rgba(255, 255, 255, 0.08); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .menu-line { position: absolute; width: 16px; height: 2px; background: currentColor; border-radius: 2px; transition: transform 500ms var(--ease); }
+    .menu-line--top { transform: translateY(-4px); }
+    .menu-line--bottom { transform: translateY(4px); }
+    .menu-toggle[aria-expanded="true"] .menu-line--top { transform: translateY(0) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .menu-line--bottom { transform: translateY(0) rotate(-45deg); }
+
+    /* Mobile full height menu */
+    .mobile-menu {
+      position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      gap: 24px; padding: 96px 24px 48px; background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease);
+    }
+    .mobile-menu.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-item { opacity: 0; transform: translateY(24px); transition: transform 500ms var(--ease), opacity 300ms var(--ease); }
+    .mobile-menu.is-open .mobile-item { opacity: 1; transform: translateY(0); }
+    .mobile-menu.is-open .mobile-item:nth-child(1) { transition-delay: 0ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(2) { transition-delay: 60ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(3) { transition-delay: 120ms; }
+    .mobile-menu.is-open .mobile-item:nth-child(4) { transition-delay: 180ms; }
+    .mobile-link { display: inline-block; padding: 4px 0; border-radius: 6px; transition: color 300ms var(--ease); }
+    .mobile-link:hover { color: var(--accent); }
+
+    /* Hero section */
+    .hero {
+      position: relative; min-height: 100svh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 48px; padding: 96px 24px 48px; overflow-x: clip;
+    }
+    .hero-copy { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; max-width: 680px; z-index: 2; }
+    .hero-headline {
+      max-width: 680px; background-image: linear-gradient(90deg, #FFFFFF 0%, #9B9B9B 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { max-width: 680px; color: var(--text-muted); }
+    .cta-group { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 8px; }
+    .cta-primary {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+      background: var(--text); color: var(--bg);
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .cta-primary:hover { background: #E4E4E7; transform: translateY(-2px); }
+    .cta-primary:active { transform: scale(0.98); }
+    .cta-primary svg { width: 16px; height: 16px; transition: transform 300ms var(--ease); }
+    .cta-primary:hover svg { transform: translateX(2px); }
+    .proof-line { display: inline-flex; align-items: center; gap: 8px; color: var(--text-subtle); }
+    .proof-dot { width: 6px; height: 6px; border-radius: 9999px; background: var(--accent); flex-shrink: 0; }
+
+    /* 3D Fanned Holo Card Stack */
+    .stage {
+      position: relative; width: 100%; max-width: 680px; height: calc(var(--card-h) + 48px);
+      display: flex; align-items: center; justify-content: center;
+      perspective: 1200px; perspective-origin: 50% 50%;
+      animation: stage-in 500ms var(--ease) both;
+    }
+    @keyframes stage-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    .stack { position: relative; width: var(--card-w); height: var(--card-h); transform-style: preserve-3d; will-change: transform; --nx: 0; --ny: 0; }
+    .card-slot { position: absolute; inset: 0; transform-style: preserve-3d; border-radius: var(--card-r); cursor: pointer; transition: transform 500ms var(--ease); will-change: transform; }
+    .card-slot[data-pos="left"] { transform: translate3d(var(--tx-left), 16px, 0px) rotateZ(-11deg); }
+    .card-slot[data-pos="center"] { transform: translate3d(0px, -4px, 28px) rotateZ(0deg); }
+    .card-slot[data-pos="right"] { transform: translate3d(var(--tx-right), 16px, 0px) rotateZ(11deg); }
+
+    /* Lift hovered card and spread its neighbors */
+    .stack[data-active="left"] .card-slot[data-pos="left"] { transform: translate3d(calc(var(--tx-left) - 12px), -16px, 68px) rotateZ(-6deg); }
+    .stack[data-active="left"] .card-slot[data-pos="center"] { transform: translate3d(16px, 2px, 18px) rotateZ(2deg); }
+    .stack[data-active="left"] .card-slot[data-pos="right"] { transform: translate3d(calc(var(--tx-right) + 20px), 20px, -8px) rotateZ(14deg); }
+    .stack[data-active="center"] .card-slot[data-pos="left"] { transform: translate3d(calc(var(--tx-left) - 24px), 20px, -8px) rotateZ(-14deg); }
+    .stack[data-active="center"] .card-slot[data-pos="center"] { transform: translate3d(0px, -22px, 68px) rotateZ(0deg); }
+    .stack[data-active="center"] .card-slot[data-pos="right"] { transform: translate3d(calc(var(--tx-right) + 24px), 20px, -8px) rotateZ(14deg); }
+    .stack[data-active="right"] .card-slot[data-pos="left"] { transform: translate3d(calc(var(--tx-left) - 20px), 20px, -8px) rotateZ(-14deg); }
+    .stack[data-active="right"] .card-slot[data-pos="center"] { transform: translate3d(-16px, 2px, 18px) rotateZ(-2deg); }
+    .stack[data-active="right"] .card-slot[data-pos="right"] { transform: translate3d(calc(var(--tx-right) + 12px), -16px, 68px) rotateZ(6deg); }
+
+    .card {
+      position: relative; width: 100%; height: 100%; aspect-ratio: 63 / 88; border-radius: var(--card-r);
+      overflow: hidden; background: var(--surface-card); border: 1px solid var(--border-card);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.55), 0 24px 48px rgba(0, 0, 0, 0.75), 0 40px 80px rgba(0, 0, 0, 0.65);
+      transition: border-color 300ms var(--ease);
+    }
+    .card-slot:hover .card, .card-slot:focus-visible .card { border-color: rgba(103, 232, 249, 0.55); }
+    .card-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-muted); letter-spacing: 0.04em; user-select: none; }
+    .card img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
+
+    /* Holographic foil sheen and glare strictly clipped to the card */
+    .holo-foil {
+      position: absolute; inset: -60%; z-index: 2; pointer-events: none;
+      background-image:
+        repeating-linear-gradient(118deg, rgba(103, 232, 249, 0.34) 0%, rgba(167, 139, 250, 0.28) 14%, rgba(244, 114, 182, 0.24) 28%, rgba(250, 204, 21, 0.24) 42%, rgba(52, 211, 153, 0.26) 56%, rgba(103, 232, 249, 0.34) 70%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0) 24%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 76%);
+      mix-blend-mode: color-dodge; opacity: 0.22;
+      transform: translate3d(calc(var(--nx) * -18%), calc(var(--ny) * -18%), 0);
+      transition: opacity 300ms var(--ease); will-change: transform;
+    }
+    .holo-glare {
+      position: absolute; inset: -50%; z-index: 3; pointer-events: none;
+      background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.08) 32%, rgba(255, 255, 255, 0) 60%);
+      opacity: 0.72; transform: translate3d(calc(var(--nx) * 28%), calc(var(--ny) * 28%), 0);
+      transition: opacity 300ms var(--ease); will-change: transform;
+    }
+    .card-slot:hover .holo-foil, .card-slot:focus-visible .holo-foil { opacity: 0.42; }
+    .card-slot:hover .holo-glare, .card-slot:focus-visible .holo-glare { opacity: 1; }
+
+    /* Responsive mobile (< 768px) */
+    @media (max-width: 767px) {
+      :root { --card-w: 136px; --card-h: 190px; --card-r: 8px; --tx-left: -76px; --tx-right: 76px; }
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-wrap { width: calc(100vw - 32px); }
+      .nav-bar { width: 100%; justify-content: space-between; padding: 8px 8px 8px 16px; gap: 12px; }
+      .nav-links, .nav-cta { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero { gap: 32px; padding: 80px 16px 32px; }
+      .stage { height: calc(var(--card-h) + 40px); }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .stage { animation: none; }
+      .stack { transform: rotateX(4deg) rotateY(-4deg); }
+      .stack[data-active] .card-slot[data-pos="left"] { transform: translate3d(var(--tx-left), 16px, 0px) rotateZ(-11deg); }
+      .stack[data-active] .card-slot[data-pos="center"] { transform: translate3d(0px, -4px, 28px) rotateZ(0deg); }
+      .stack[data-active] .card-slot[data-pos="right"] { transform: translate3d(var(--tx-right), 16px, 0px) rotateZ(11deg); }
+      .card-slot, .holo-foil, .holo-glare, .mobile-item, .menu-line { transition: opacity 300ms var(--ease); }
+    }
+  </style>
+</head>
+<body id="top">
+  <a class="skip-link title-4" href="#main-content">Skip to content</a>
+
+  <header class="nav-wrap">
+    <nav class="nav-bar" aria-label="Primary">
+      <a class="brand title-4" href="#top">
+        <svg class="brand-mark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
+          <rect x="1" y="1" width="4" height="4" rx="1"/><rect x="7" y="1" width="4" height="4" rx="1"/><rect x="13" y="1" width="4" height="4" rx="1"/>
+          <rect x="1" y="7" width="4" height="4" rx="1"/><rect x="7" y="7" width="4" height="4" rx="1" fill="#67E8F9"/><rect x="13" y="7" width="4" height="4" rx="1"/>
+          <rect x="1" y="13" width="4" height="4" rx="1"/><rect x="7" y="13" width="4" height="4" rx="1"/><rect x="13" y="13" width="4" height="4" rx="1"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a class="nav-link title-4" href="#features">Features</a></li>
+        <li><a class="nav-link title-4" href="#how-it-works">How it works</a></li>
+        <li><a class="nav-link title-4" href="#faq">FAQ</a></li>
+      </ul>
+      <a class="nav-cta button-sm" href="/planner">Open the planner</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+        <span class="menu-line menu-line--top" aria-hidden="true"></span>
+        <span class="menu-line menu-line--bottom" aria-hidden="true"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <a class="mobile-item mobile-link heading-5" href="#features">Features</a>
+    <a class="mobile-item mobile-link heading-5" href="#how-it-works">How it works</a>
+    <a class="mobile-item mobile-link heading-5" href="#faq">FAQ</a>
+    <div class="mobile-item">
+      <a class="cta-primary button-md" href="/planner">
+        <span>Open the planner</span>
+        <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <main id="main-content">
+    <section class="hero" id="hero">
+      <div class="hero-copy">
+        <h1 class="hero-headline heading-1">Build the One Piece binder<br>you actually want to show off</h1>
+        <p class="hero-sub body-3">Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.</p>
+        <div class="cta-group">
+          <a class="cta-primary button-md" href="/planner">
+            <span>Open the planner</span>
+            <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/></svg>
+          </a>
+          <p class="proof-line caption-5">
+            <span class="proof-dot" aria-hidden="true"></span>
+            <span>Free · No account · Every One Piece set</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="stack" id="cardStack">
+          <article class="card-slot" data-pos="left" tabindex="0" aria-label="Roronoa Zoro card">
+            <div class="card">
+              <span class="card-fallback caption-5" aria-hidden="true">OP01-025</span>
+              <img src="https://www.optcgapi.com/media/static/Card_Images/OP01-025.jpg" alt="Roronoa Zoro card from Romance Dawn" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+              <div class="holo-foil" aria-hidden="true"></div>
+              <div class="holo-glare" aria-hidden="true"></div>
+            </div>
+          </article>
+          <article class="card-slot" data-pos="center" tabindex="0" aria-label="Shanks anchor card">
+            <div class="card">
+              <span class="card-fallback caption-5" aria-hidden="true">OP01-120</span>
+              <img src="https://www.optcgapi.com/media/static/Card_Images/OP01-120.jpg" alt="Shanks secret rare card from Romance Dawn" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+              <div class="holo-foil" aria-hidden="true"></div>
+              <div class="holo-glare" aria-hidden="true"></div>
+            </div>
+          </article>
+          <article class="card-slot" data-pos="right" tabindex="0" aria-label="Monkey D. Luffy leader card">
+            <div class="card">
+              <span class="card-fallback caption-5" aria-hidden="true">OP05-001</span>
+              <img src="https://www.optcgapi.com/media/static/Card_Images/OP05-001.jpg" alt="Monkey D. Luffy leader card from Awakening of the New Era" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.remove()">
+              <div class="holo-foil" aria-hidden="true"></div>
+              <div class="holo-glare" aria-hidden="true"></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const toggle = document.querySelector('.menu-toggle');
+      const menu = document.getElementById('mobile-menu');
+      const setMenuOpen = (open) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menu.classList.toggle('is-open', open);
+        menu.setAttribute('aria-hidden', String(!open));
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+
+      toggle.addEventListener('click', () => setMenuOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+      menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('is-open')) {
+          setMenuOpen(false);
+          toggle.focus();
+        }
+      });
+
+      // Card hover/focus lift + neighbor spread
+      const hero = document.getElementById('hero');
+      const stack = document.getElementById('cardStack');
+      stack.querySelectorAll('.card-slot').forEach((slot) => {
+        const pos = slot.dataset.pos;
+        slot.addEventListener('pointerenter', (e) => {
+          if (e.pointerType !== 'touch') stack.dataset.active = pos;
+        });
+        slot.addEventListener('pointerleave', () => {
+          if (stack.dataset.active === pos) delete stack.dataset.active;
+        });
+        slot.addEventListener('focus', () => { stack.dataset.active = pos; });
+        slot.addEventListener('blur', () => {
+          if (stack.dataset.active === pos) delete stack.dataset.active;
+        });
+      });
+
+      // 3D pointer tilt on desktop, slow ambient idle sway on mobile / touch
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const noHover = window.matchMedia('(hover: none)');
+      const mobileQuery = window.matchMedia('(max-width: 767px)');
+
+      const MAX_TILT = 14;
+      let targetX = 0;
+      let targetY = 0;
+      let currentX = 0;
+      let currentY = 0;
+      let rafId = 0;
+
+      const useAmbientSway = () => noHover.matches || mobileQuery.matches;
+
+      hero.addEventListener('pointermove', (e) => {
+        if (reduceMotion.matches || useAmbientSway() || e.pointerType === 'touch') return;
+        const rect = hero.getBoundingClientRect();
+        targetX = Math.max(-1, Math.min(1, ((e.clientX - rect.left) / rect.width) * 2 - 1));
+        targetY = Math.max(-1, Math.min(1, ((e.clientY - rect.top) / rect.height) * 2 - 1));
+      });
+
+      hero.addEventListener('pointerleave', () => {
+        targetX = 0;
+        targetY = 0;
+      });
+
+      const tick = (now) => {
+        if (useAmbientSway()) {
+          const t = now * 0.001;
+          targetX = Math.sin(t * 0.65) * 0.45;
+          targetY = Math.cos(t * 0.5) * 0.35;
+        }
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+
+        stack.style.transform = `rotateX(${(-currentY * MAX_TILT).toFixed(3)}deg) rotateY(${(currentX * MAX_TILT).toFixed(3)}deg)`;
+        stack.style.setProperty('--nx', currentX.toFixed(4));
+        stack.style.setProperty('--ny', currentY.toFixed(4));
+        rafId = requestAnimationFrame(tick);
+      };
+
+      const syncMotion = () => {
+        cancelAnimationFrame(rafId);
+        if (reduceMotion.matches) {
+          stack.style.transform = '';
+          stack.style.setProperty('--nx', '0');
+          stack.style.setProperty('--ny', '0');
+        } else {
+          rafId = requestAnimationFrame(tick);
+        }
+      };
+
+      syncMotion();
+      reduceMotion.addEventListener('change', syncMotion);
+    })();
+  </script>
+</body>
+</html>

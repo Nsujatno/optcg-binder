@@ -1,0 +1,494 @@
+<!--
+  Concept 10 · Light gallery coverflow
+  Trend: Editorial museum light surface with tactile 3D binder gallery coverflow
+  Tests: Whether a bright gallery presentation makes real card art and spanning Michi binder pages feel like framed collector prints.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10 · Light gallery coverflow · OPTCG Binder hero</title>
+  <meta name="description" content="Plan every One Piece Card Game binder pocket before printing. Arrange cards from every set and span custom art across pockets in your browser.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000000'/%3E%3Cg fill='%23FFFFFF'%3E%3Crect x='7' y='7' width='4' height='4' rx='1'/%3E%3Crect x='14' y='7' width='4' height='4' rx='1'/%3E%3Crect x='21' y='7' width='4' height='4' rx='1'/%3E%3Crect x='7' y='14' width='4' height='4' rx='1'/%3E%3Crect x='14' y='14' width='4' height='4' rx='1'/%3E%3Crect x='21' y='14' width='4' height='4' rx='1'/%3E%3Crect x='7' y='21' width='4' height='4' rx='1'/%3E%3Crect x='14' y='21' width='4' height='4' rx='1'/%3E%3Crect x='21' y='21' width='4' height='4' rx='1'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FFFFFF; --surface: #F5F5F5; --binder-bg: #EDEDED; --card-surface: #272727;
+      --ink: #000000; --ink-muted: #525252; --ink-subtle: #737373; --accent: #0E7490;
+      --border: rgba(0, 0, 0, 0.08); --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      /* Binder card sizing and exact Michi span math (896x1200 natural art ratio) */
+      --card-w: 84px; --card-h: calc(var(--card-w) * 88 / 63); --tile-gap: 8px;
+      --span2-w: calc(2 * var(--card-w) + var(--tile-gap)); --span2-img-h: calc(var(--span2-w) * 1200 / 896); --span2-y0: calc((var(--card-h) - var(--span2-img-h)) / 2);
+      --span3-w: calc(3 * var(--card-w) + 2 * var(--tile-gap)); --span3-img-h: calc(var(--span3-w) * 1200 / 896);
+      --span3-h: calc(2 * var(--card-h) + var(--tile-gap)); --span3-y0: calc((var(--span3-h) - var(--span3-img-h)) / 2);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background-color: var(--bg); color: var(--ink); font-family: 'Geist', system-ui, sans-serif; font-style: normal; -webkit-font-smoothing: antialiased; overflow-x: clip; }
+
+    /* Named text styles (Tailwind scale) */
+    .heading-1 { font-size: 60px; line-height: 60px; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+    .title-4 { font-size: 14px; line-height: 20px; font-weight: 500; }
+    .body-3 { font-size: 16px; line-height: 24px; font-weight: 400; text-wrap: pretty; }
+    .button-md { font-size: 16px; line-height: 24px; font-weight: 600; }
+    .button-sm { font-size: 14px; line-height: 20px; font-weight: 600; }
+    .caption-4 { font-size: 12px; line-height: 16px; font-weight: 500; }
+    .caption-5 { font-size: 12px; line-height: 16px; font-weight: 400; }
+
+    a:focus-visible, button:focus-visible, [tabindex="0"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .skip-link {
+      position: fixed; top: 16px; left: 16px; z-index: 100; padding: 8px 12px; border-radius: 8px;
+      background-color: #000000; color: #FFFFFF; text-decoration: none;
+      transform: translateY(-96px); opacity: 0; transition: transform 300ms var(--ease), opacity 300ms var(--ease);
+    }
+    .skip-link:focus-visible { transform: translateY(0); opacity: 1; }
+
+    /* Floating Navigation (translucent white) */
+    .site-header { position: fixed; top: 16px; left: 0; right: 0; z-index: 50; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+    .nav-bar {
+      pointer-events: auto; display: inline-flex; align-items: center; gap: 24px; padding: 8px 8px 8px 16px;
+      background-color: rgba(255, 255, 255, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; white-space: nowrap; border-radius: 8px; transition: opacity 300ms var(--ease), transform 300ms var(--ease); }
+    .brand:hover { opacity: 0.72; }
+    .brand:active { transform: scale(0.98); }
+    .brand-mark { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+
+    .nav-links { display: flex; align-items: center; gap: 4px; list-style: none; }
+    .nav-link {
+      display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 8px; color: var(--ink-muted); text-decoration: none; white-space: nowrap;
+      transition: color 300ms var(--ease), background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .nav-link:hover { color: var(--ink); background-color: var(--surface); }
+    .nav-link:active { transform: scale(0.98); }
+
+    .btn-nav {
+      display: inline-flex; align-items: center; padding: 8px 12px; border-radius: 8px; background-color: #000000; color: #FFFFFF; text-decoration: none; white-space: nowrap;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .btn-nav:hover { background-color: #262626; transform: translateY(-1px); }
+    .btn-nav:active { transform: scale(0.98); }
+
+    /* Mobile Toggle and Full-height Drawer */
+    .menu-toggle {
+      display: none; position: relative; width: 40px; height: 40px; border: 1px solid var(--border); border-radius: 8px;
+      background-color: var(--surface); color: var(--ink); cursor: pointer; align-items: center; justify-content: center;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .menu-toggle:hover { background-color: var(--binder-bg); }
+    .menu-toggle:active { transform: scale(0.98); }
+    .toggle-line { position: absolute; width: 16px; height: 2px; border-radius: 2px; background-color: currentColor; transition: transform 500ms var(--ease); }
+    .toggle-line--top { transform: translateY(-4px); }
+    .toggle-line--bot { transform: translateY(4px); }
+    .menu-toggle[aria-expanded="true"] .toggle-line--top { transform: translateY(0) rotate(45deg); }
+    .menu-toggle[aria-expanded="true"] .toggle-line--bot { transform: translateY(0) rotate(-45deg); }
+
+    .mobile-drawer {
+      position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 16px;
+      padding: 96px 32px 48px; background-color: rgba(255, 255, 255, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      opacity: 0; pointer-events: none; transition: opacity 300ms var(--ease);
+    }
+    .mobile-drawer.is-open { opacity: 1; pointer-events: auto; }
+    .mobile-item { opacity: 0; transform: translateY(24px); transition: opacity 220ms var(--ease), transform 220ms var(--ease); }
+    .mobile-drawer.is-open .mobile-item { opacity: 1; transform: translateY(0); }
+    .mobile-drawer.is-open .mobile-item:nth-child(1) { transition-delay: 0ms; }
+    .mobile-drawer.is-open .mobile-item:nth-child(2) { transition-delay: 60ms; }
+    .mobile-drawer.is-open .mobile-item:nth-child(3) { transition-delay: 120ms; }
+    .mobile-drawer.is-open .mobile-item:nth-child(4) { transition-delay: 180ms; }
+    .mobile-link { display: inline-block; padding: 8px 0; color: var(--ink); text-decoration: none; border-radius: 8px; transition: color 300ms var(--ease), transform 300ms var(--ease); }
+    .mobile-link:hover { color: var(--accent); }
+    .mobile-link:active { transform: scale(0.98); }
+
+    /* Hero Section */
+    .hero {
+      position: relative; min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 32px; padding: 96px 24px 48px; background-color: var(--bg); overflow-x: clip;
+    }
+    .hero-copy { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; width: 100%; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 9999px;
+      background-color: var(--surface); border: 1px solid var(--border); color: var(--ink-muted);
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 9999px; background-color: var(--accent); flex-shrink: 0; }
+    .hero-heading {
+      max-width: 680px; background-image: linear-gradient(90deg, #000000 0%, #666666 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { max-width: 680px; color: var(--ink-muted); }
+    .hero-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 8px; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 12px;
+      border-radius: 8px; background-color: #000000; color: #FFFFFF; text-decoration: none;
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .btn-primary:hover { background-color: #262626; transform: translateY(-2px); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-icon { width: 16px; height: 16px; flex-shrink: 0; transition: transform 300ms var(--ease); }
+    .btn-primary:hover .btn-icon { transform: translateX(2px); }
+    .microcopy { color: var(--ink-subtle); }
+
+    /* 3D Gallery Coverflow */
+    .coverflow { width: 100%; max-width: 1280px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .cf-stage { position: relative; width: 100%; height: 440px; perspective: 1200px; transform-style: preserve-3d; border-radius: 16px; }
+    .cf-slide {
+      position: absolute; top: 50%; left: 50%; border: 0; background: transparent; font-family: inherit; color: inherit; cursor: pointer;
+      transform-style: preserve-3d; display: flex; flex-direction: column; align-items: center; gap: 12px; border-radius: 16px;
+      transition: transform 700ms var(--ease), opacity 700ms var(--ease); will-change: transform, opacity;
+    }
+    .cf-slide.is-active { cursor: default; }
+    .cf-slide.no-transition { transition: none; }
+    .page-tilt { transform-style: preserve-3d; will-change: transform; }
+
+    /* 3x3 Binder Sheet: outer 16px - pad 8px = pocket 8px; pocket 8px - pad 2px = card 6px */
+    .binder-sheet {
+      padding: 8px; border-radius: 16px; background-color: var(--binder-bg); border: 1px solid var(--border);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 12px 24px rgba(0, 0, 0, 0.06), 0 24px 48px rgba(0, 0, 0, 0.06);
+      transition: transform 300ms var(--ease), border-color 300ms var(--ease);
+    }
+    .cf-slide.is-active .binder-sheet {
+      border-color: rgba(14, 116, 144, 0.28);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 16px 32px rgba(0, 0, 0, 0.09), 0 32px 64px rgba(0, 0, 0, 0.1);
+    }
+    .cf-slide:not(.is-active):hover .binder-sheet { border-color: rgba(0, 0, 0, 0.18); }
+    .cf-slide:not(.is-active):active .binder-sheet { transform: scale(0.98); }
+
+    .binder-grid { display: grid; grid-template-columns: repeat(3, calc(var(--card-w) + 4px)); gap: 4px; }
+    .pocket { padding: 2px; border-radius: 8px; background-color: rgba(0, 0, 0, 0.04); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06); }
+    .card {
+      position: relative; width: var(--card-w); height: var(--card-h); border-radius: 6px;
+      background-color: var(--card-surface); overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+    .card-fallback { color: rgba(255, 255, 255, 0.56); letter-spacing: 0.03em; user-select: none; }
+    .card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* Spanning Michi tiles sliced across exact 8px pocket seams (2px + 4px + 2px) */
+    .michi-tile { width: var(--card-w); height: var(--card-h); border-radius: 6px; background-color: var(--card-surface); background-repeat: no-repeat; }
+    .michi-2x1 {
+      background-size: var(--span2-w) var(--span2-img-h);
+      background-position-x: calc(-1 * var(--c) * (var(--card-w) + var(--tile-gap)));
+      background-position-y: var(--span2-y0);
+    }
+    .michi-3x2 {
+      background-size: var(--span3-w) var(--span3-img-h);
+      background-position-x: calc(-1 * var(--c) * (var(--card-w) + var(--tile-gap)));
+      background-position-y: calc(var(--span3-y0) - var(--r) * (var(--card-h) + var(--tile-gap)));
+    }
+
+    .page-caption { color: var(--ink-subtle); white-space: nowrap; transition: color 300ms var(--ease); }
+    .cf-slide.is-active .page-caption { color: var(--ink); }
+
+    /* Dot indicators */
+    .cf-dots { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .cf-dot {
+      position: relative; width: 32px; height: 32px; border: 0; border-radius: 9999px; background: transparent;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: transform 300ms var(--ease);
+    }
+    .cf-dot::after {
+      content: ''; width: 8px; height: 8px; border-radius: 9999px; background-color: rgba(0, 0, 0, 0.18);
+      transition: background-color 300ms var(--ease), transform 300ms var(--ease);
+    }
+    .cf-dot:hover::after { background-color: rgba(0, 0, 0, 0.42); transform: scale(1.2); }
+    .cf-dot[aria-pressed="true"]::after { background-color: var(--accent); transform: scale(1.35); }
+    .cf-dot:active { transform: scale(0.98); }
+
+    @media (max-width: 767px) {
+      :root { --card-w: 68px; }
+      .heading-1 { font-size: 36px; line-height: 40px; }
+      .nav-bar { width: 100%; max-width: 358px; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 12px; }
+      .nav-links, .btn-nav { display: none; }
+      .menu-toggle { display: inline-flex; }
+      .hero { justify-content: flex-start; gap: 24px; padding: 80px 16px 32px; }
+      .cf-stage { height: 368px; perspective: 900px; }
+      .coverflow { gap: 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cf-slide, .mobile-item, .mobile-drawer, .toggle-line, .btn-primary, .btn-icon, .btn-nav, .nav-link, .brand, .skip-link, .cf-dot::after {
+        transition: opacity 200ms var(--ease);
+      }
+      .mobile-item { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link button-sm">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav-bar" aria-label="Primary">
+      <a href="#" class="brand title-4">
+        <svg class="brand-mark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="2" y="2" width="5" height="5" rx="1.5"/><rect x="9.5" y="2" width="5" height="5" rx="1.5"/><rect x="17" y="2" width="5" height="5" rx="1.5"/>
+          <rect x="2" y="9.5" width="5" height="5" rx="1.5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.5"/><rect x="17" y="9.5" width="5" height="5" rx="1.5"/>
+          <rect x="2" y="17" width="5" height="5" rx="1.5"/><rect x="9.5" y="17" width="5" height="5" rx="1.5"/><rect x="17" y="17" width="5" height="5" rx="1.5"/>
+        </svg>
+        <span>OPTCG Binder</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features" class="nav-link title-4">Features</a></li>
+        <li><a href="#how-it-works" class="nav-link title-4">How it works</a></li>
+        <li><a href="#faq" class="nav-link title-4">FAQ</a></li>
+      </ul>
+      <a href="/planner" class="btn-nav button-sm">Open the planner</a>
+      <button type="button" class="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-drawer">
+        <span class="toggle-line toggle-line--top" aria-hidden="true"></span>
+        <span class="toggle-line toggle-line--bot" aria-hidden="true"></span>
+      </button>
+    </nav>
+  </header>
+
+  <div id="mobile-drawer" class="mobile-drawer" aria-hidden="true">
+    <a href="#features" class="mobile-item mobile-link heading-1">Features</a>
+    <a href="#how-it-works" class="mobile-item mobile-link heading-1">How it works</a>
+    <a href="#faq" class="mobile-item mobile-link heading-1">FAQ</a>
+    <a href="/planner" class="mobile-item btn-primary button-md">
+      <span>Open the planner</span>
+      <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+        <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/>
+      </svg>
+    </a>
+  </div>
+
+  <main id="main-content">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow caption-4">
+          <span class="eyebrow-dot" aria-hidden="true"></span>
+          <span>3x3 gallery preview · Michi art spans</span>
+        </div>
+        <h1 id="hero-title" class="hero-heading heading-1">
+          Every pocket planned<br>before a single print
+        </h1>
+        <p class="hero-sub body-3">
+          Drag in cards from every One Piece set, span your own art across pockets, and let AI suggest what fits beside your anchor card. Free, and it runs right in your browser.
+        </p>
+        <div class="hero-actions">
+          <a href="/planner" class="btn-primary button-md">
+            <span>Open the planner</span>
+            <svg class="btn-icon" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">
+              <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"/>
+            </svg>
+          </a>
+          <p class="microcopy caption-5">Saved in your browser. Your art never leaves your device.</p>
+        </div>
+      </div>
+
+      <div class="coverflow" id="coverflow" role="region" aria-roledescription="carousel" aria-label="Sample One Piece binder pages">
+        <div class="cf-stage" id="cf-stage" tabindex="0" aria-label="Binder page gallery. Use left and right arrow keys to browse pages."></div>
+        <div class="cf-dots" id="cf-dots" role="group" aria-label="Choose a binder page"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const IMG_BASE = 'https://www.optcgapi.com/media/static/Card_Images/';
+      const CARD_ALT = {
+        'OP01-001': 'Roronoa Zoro red leader card', 'OP01-025': 'Roronoa Zoro super rare card', 'OP01-077': 'Perona Romance Dawn card',
+        'OP01-120': 'Shanks secret rare card', 'OP02-001': 'Edward Newgate leader card', 'OP02-004': 'Edward Newgate Paramount War card',
+        'OP02-099': 'Sakazuki Paramount War card', 'OP03-001': 'Portgas D. Ace leader card', 'OP03-040': 'Nami blue leader card',
+        'OP04-001': 'Donquixote Doflamingo leader card', 'OP05-001': 'Sabo leader card', 'OP05-060': 'Monkey D. Luffy purple leader card',
+        'OP06-001': 'Uta leader card', 'OP07-001': 'Monkey D. Dragon leader card', 'OP08-001': 'Tony Tony Chopper leader card',
+        'ST01-001': 'Monkey D. Luffy Straw Hat leader card', 'ST01-012': 'Monkey D. Luffy Straw Hat card'
+      };
+      const m = (file, span, c, r) => ({ michi: 'assets/' + file, span, c, r });
+      const pages = [
+        { caption: 'Zoro character page', slots: [m('michi-sunset.jpg', '2x1', 0, 0), m('michi-sunset.jpg', '2x1', 1, 0), 'OP01-001', 'OP01-025', 'ST01-001', 'OP01-120', 'OP01-077', 'ST01-012', 'OP01-025'] },
+        { caption: 'Storm Michi page', slots: [m('michi-storm.jpg', '3x2', 0, 0), m('michi-storm.jpg', '3x2', 1, 0), m('michi-storm.jpg', '3x2', 2, 0), m('michi-storm.jpg', '3x2', 0, 1), m('michi-storm.jpg', '3x2', 1, 1), m('michi-storm.jpg', '3x2', 2, 1), 'OP03-040', 'OP05-060', 'OP04-001'] },
+        { caption: 'Romance Dawn set page', slots: ['OP01-001', 'OP01-025', 'OP01-077', 'OP01-120', 'ST01-001', 'ST01-012', 'OP01-025', 'OP01-120', 'OP01-001'] },
+        { caption: 'Red leaders', slots: ['OP01-001', 'OP02-001', 'OP03-001', 'ST01-001', 'OP01-120', 'OP05-001', 'OP06-001', 'OP07-001', 'OP08-001'] },
+        { caption: 'Paramount War', slots: ['OP02-001', 'OP02-004', 'OP02-099', 'OP03-001', 'OP05-001', 'ST01-012', 'OP02-004', 'OP02-099', 'OP02-001'] }
+      ];
+
+      const stage = document.getElementById('cf-stage');
+      const dotsWrap = document.getElementById('cf-dots');
+      const coverflow = document.getElementById('coverflow');
+      const slides = [], dots = [], prevOffsets = new Array(pages.length).fill(null);
+      let active = 0;
+      const N = pages.length;
+
+      function el(tag, cls) { const n = document.createElement(tag); if (cls) n.className = cls; return n; }
+
+      pages.forEach((page, idx) => {
+        const slide = el('button', 'cf-slide');
+        slide.type = 'button';
+        slide.setAttribute('aria-label', 'Show ' + page.caption);
+        const tiltWrap = el('div', 'page-tilt');
+        const sheet = el('div', 'binder-sheet');
+        const grid = el('div', 'binder-grid');
+
+        page.slots.forEach((slot) => {
+          const pocket = el('div', 'pocket');
+          if (typeof slot === 'string') {
+            const card = el('div', 'card');
+            const fb = el('span', 'card-fallback caption-5');
+            fb.textContent = slot;
+            const img = el('img');
+            img.src = IMG_BASE + slot + '.jpg';
+            img.alt = CARD_ALT[slot] || 'One Piece card';
+            img.loading = 'eager'; img.decoding = 'async'; img.referrerPolicy = 'no-referrer';
+            img.onerror = function () { this.remove(); };
+            card.append(fb, img);
+            pocket.appendChild(card);
+          } else {
+            const tile = el('div', 'michi-tile michi-' + slot.span);
+            tile.style.backgroundImage = 'url("' + slot.michi + '")';
+            tile.style.setProperty('--c', slot.c);
+            tile.style.setProperty('--r', slot.r);
+            tile.setAttribute('role', 'img');
+            tile.setAttribute('aria-label', slot.span === '3x2' ? 'Stormy sea spanning binder art' : 'Sunset ship spanning binder art');
+            pocket.appendChild(tile);
+          }
+          grid.appendChild(pocket);
+        });
+
+        sheet.appendChild(grid);
+        tiltWrap.appendChild(sheet);
+        const caption = el('span', 'page-caption caption-4');
+        caption.textContent = page.caption;
+        slide.append(tiltWrap, caption);
+        slide.addEventListener('click', () => { if (idx !== active) { goTo(idx); restartAuto(); } });
+        stage.appendChild(slide);
+        slides.push({ el: slide, tilt: tiltWrap });
+
+        const dot = el('button', 'cf-dot');
+        dot.type = 'button';
+        dot.setAttribute('aria-label', 'Show ' + page.caption);
+        dot.setAttribute('aria-pressed', 'false');
+        dot.addEventListener('click', () => { goTo(idx); restartAuto(); });
+        dotsWrap.appendChild(dot);
+        dots.push(dot);
+      });
+
+      function getOffset(index, center) {
+        let d = (index - center + N) % N;
+        return d > 2 ? d - N : d;
+      }
+
+      function slideTransform(d, mobile) {
+        if (d === 0) return { x: 0, z: 0, ry: 0, op: 1, zi: 30 };
+        const s = d < 0 ? -1 : 1;
+        const abs = Math.abs(d);
+        if (mobile) return abs === 1 ? { x: s * 188, z: -120, ry: -s * 42, op: 0.85, zi: 20 } : { x: s * 300, z: -240, ry: -s * 50, op: 0, zi: 10 };
+        return abs === 1 ? { x: s * 290, z: -140, ry: -s * 45, op: 0.92, zi: 20 } : { x: s * 510, z: -280, ry: -s * 52, op: 0.68, zi: 10 };
+      }
+
+      const tiltCur = { rx: 0, ry: 0 };
+      const tiltTarget = { rx: 0, ry: 0 };
+      let tiltRaf = 0;
+
+      function render(instant) {
+        const mobile = window.innerWidth < 768;
+        slides.forEach((item, idx) => {
+          const d = getOffset(idx, active);
+          const prev = prevOffsets[idx];
+          const wrapped = !instant && prev !== null && Math.abs(d - prev) > 2;
+          const t = slideTransform(d, mobile);
+          const tf = 'translate(-50%, -50%) translate3d(' + t.x + 'px, 0px, ' + t.z + 'px) rotateY(' + t.ry + 'deg)';
+
+          if (wrapped) {
+            item.el.classList.add('no-transition');
+            item.el.style.opacity = '0';
+            item.el.style.zIndex = String(t.zi);
+            item.el.style.transform = tf;
+            void item.el.offsetWidth;
+            item.el.classList.remove('no-transition');
+            item.el.style.opacity = String(t.op);
+          } else {
+            if (instant) item.el.classList.add('no-transition');
+            item.el.style.zIndex = String(t.zi);
+            item.el.style.transform = tf;
+            item.el.style.opacity = String(t.op);
+            if (instant) { void item.el.offsetWidth; item.el.classList.remove('no-transition'); }
+          }
+
+          item.el.classList.toggle('is-active', d === 0);
+          if (d !== 0) item.tilt.style.transform = '';
+          prevOffsets[idx] = d;
+        });
+        dots.forEach((dot, idx) => dot.setAttribute('aria-pressed', String(idx === active)));
+      }
+
+      function goTo(index) {
+        active = (index + N) % N;
+        tiltCur.rx = 0; tiltCur.ry = 0; tiltTarget.rx = 0; tiltTarget.ry = 0;
+        render(false);
+      }
+
+      coverflow.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); goTo(active + 1); restartAuto(); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(active - 1); restartAuto(); }
+      });
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const canHover = window.matchMedia('(hover: hover)');
+      let timerId = 0, hoverPaused = false, focusPaused = false;
+
+      function startAuto() {
+        if (reducedMotion.matches || hoverPaused || focusPaused || document.hidden) return;
+        clearInterval(timerId);
+        timerId = window.setInterval(() => goTo(active + 1), 3500);
+      }
+      function stopAuto() { clearInterval(timerId); timerId = 0; }
+      function restartAuto() { stopAuto(); startAuto(); }
+
+      coverflow.addEventListener('pointerenter', () => { hoverPaused = true; stopAuto(); });
+      coverflow.addEventListener('pointerleave', () => { hoverPaused = false; startAuto(); });
+      coverflow.addEventListener('focusin', () => { focusPaused = true; stopAuto(); });
+      coverflow.addEventListener('focusout', (e) => { if (!coverflow.contains(e.relatedTarget)) { focusPaused = false; startAuto(); } });
+      document.addEventListener('visibilitychange', () => document.hidden ? stopAuto() : startAuto());
+
+      function tiltTick() {
+        const lerp = 0.08;
+        tiltCur.rx += (tiltTarget.rx - tiltCur.rx) * lerp;
+        tiltCur.ry += (tiltTarget.ry - tiltCur.ry) * lerp;
+        slides[active].tilt.style.transform = 'rotateX(' + tiltCur.rx.toFixed(2) + 'deg) rotateY(' + tiltCur.ry.toFixed(2) + 'deg)';
+        if (Math.abs(tiltTarget.rx - tiltCur.rx) + Math.abs(tiltTarget.ry - tiltCur.ry) > 0.02) {
+          tiltRaf = requestAnimationFrame(tiltTick);
+        } else {
+          tiltRaf = 0;
+        }
+      }
+      function wakeTilt() { if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltTick); }
+
+      if (!reducedMotion.matches && canHover.matches) {
+        stage.addEventListener('pointermove', (e) => {
+          const rect = slides[active].el.getBoundingClientRect();
+          if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+            tiltTarget.rx = (((e.clientY - rect.top) / rect.height) * 2 - 1) * -6;
+            tiltTarget.ry = (((e.clientX - rect.left) / rect.width) * 2 - 1) * 7;
+          } else {
+            tiltTarget.rx = 0; tiltTarget.ry = 0;
+          }
+          wakeTilt();
+        }, { passive: true });
+        stage.addEventListener('pointerleave', () => { tiltTarget.rx = 0; tiltTarget.ry = 0; wakeTilt(); });
+      }
+
+      // Mobile menu toggle
+      const toggle = document.querySelector('.menu-toggle');
+      const drawer = document.getElementById('mobile-drawer');
+      function setMenu(open) {
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        drawer.classList.toggle('is-open', open);
+        drawer.setAttribute('aria-hidden', String(!open));
+      }
+      toggle.addEventListener('click', () => setMenu(toggle.getAttribute('aria-expanded') !== 'true'));
+      drawer.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawer.classList.contains('is-open')) { setMenu(false); toggle.focus(); }
+      });
+
+      window.addEventListener('resize', () => render(true), { passive: true });
+      render(true);
+      startAuto();
+    })();
+  </script>
+</body>
+</html>
